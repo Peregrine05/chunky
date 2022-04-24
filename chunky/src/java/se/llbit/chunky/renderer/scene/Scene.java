@@ -610,9 +610,9 @@ public class Scene implements JsonSerializable, Refreshable {
       }
 
       boolean emitterGridNeedChunkReload = false;
+      boolean octreeLoaded = loadOctree(context, taskTracker);
       if (emitterSamplingStrategy != EmitterSamplingStrategy.NONE)
         emitterGridNeedChunkReload = !loadEmitterGrid(context, taskTracker);
-      boolean octreeLoaded = loadOctree(context, taskTracker);
       if (emitterGridNeedChunkReload || !octreeLoaded) {
         // Could not load stored octree or emitter grid.
         // Load the chunks from the world.
@@ -1253,7 +1253,7 @@ public class Scene implements JsonSerializable, Refreshable {
                   cubeWorldBlocks[cubeIndex] = octNode;
 
                   if(emitterGrid != null && block.emittance > 1e-4) {
-                    emitterGrid.addEmitter(new Grid.EmitterPosition(x + 0.5f, y - origin.y + 0.5f, z + 0.5f));
+                    emitterGrid.addEmitter(new Grid.EmitterPosition(x, y, z, block));
                   }
                 }
               }
@@ -2118,7 +2118,7 @@ public class Scene implements JsonSerializable, Refreshable {
       Log.info("Saving Grid " + filename);
 
       try (DataOutputStream out = new DataOutputStream(new GZIPOutputStream(context.getSceneFileOutputStream(filename)))) {
-        emitterGrid.store(out);
+        emitterGrid.store(out, this);
       } catch (IOException e) {
         Log.warn("Couldn't save Grid", e);
       }
@@ -2169,7 +2169,7 @@ public class Scene implements JsonSerializable, Refreshable {
     try (TaskTracker.Task task = taskTracker.task("Loading grid")) {
       Log.info("Load grid " + filename);
       try (DataInputStream in = new DataInputStream(new FastBufferedInputStream(new GZIPInputStream(context.getSceneFileInputStream(filename))))) {
-        emitterGrid = Grid.load(in);
+        emitterGrid = Grid.load(in, this);
         return true;
       } catch (Exception e) {
         Log.info("Failed to load the grid", e);
