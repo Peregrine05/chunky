@@ -58,7 +58,7 @@
     <HBox alignment="CENTER_LEFT" spacing="10.0">
       <CheckBox fx:id="saveDumps" mnemonicParsing="false" text="Save dump once every" />
       <ComboBox fx:id="dumpFrequency" />
-      <Label text="frames" />
+      <Label text="SPP" />
     </HBox>
     <CheckBox fx:id="saveSnapshots" mnemonicParsing="false" text="Save snapshot for each dump" />
     <HBox alignment="CENTER_LEFT" spacing="10.0">
