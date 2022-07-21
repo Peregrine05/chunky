@@ -54,12 +54,14 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -205,21 +207,42 @@ public class ResourcePackChooserController implements Initializable {
       );
     }
 
+    private void openInSystemFileBrowser(File file) {
+      try {
+        if(file.isDirectory()) {
+          Desktop.getDesktop().open(file);
+          return;
+        }
+
+        try {
+          Desktop.Action featureSupportConst = Arrays
+            .stream(Desktop.Action.class.getEnumConstants())
+            .filter(action -> action.name().equals("BROWSE_FILE_DIR"))
+            .findFirst()
+            .orElseThrow(NoSuchFieldException::new);
+          if(Desktop.getDesktop().isSupported(featureSupportConst)) {
+            // Java 9 method to open a file browser and select the file
+            Method method = Desktop.class.getMethod("browseFileDirectory", File.class);
+            method.invoke(Desktop.getDesktop(), file);
+            return;
+          }
+        } catch (ReflectiveOperationException ignored) {
+        }
+
+        // otherwise just open the parent folder without selecting the file
+        Desktop.getDesktop().open(file.getParentFile());
+      } catch (IOException ioex) {
+        Log.warn("Failed to open resource pack file in system file browser.", ioex);
+      }
+    }
+
     private void initContextMenu() {
       this.setContextMenu(new ContextMenu(
         buildMenuItem("Open in system file browser",
           evt -> {
             if(getItem() == null)
               return;
-            try {
-              Desktop.getDesktop().open(
-                getItem().isDefaultPack()
-                  ? getItem().file.getParentFile()
-                  : getItem().file.getParentFile()
-              );
-            } catch (IOException ex) {
-              Log.warn("Failed to open resource pack file in system file browser.", ex);
-            }
+            openInSystemFileBrowser(getItem().file);
           },
           menuItem -> {
             if(Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
