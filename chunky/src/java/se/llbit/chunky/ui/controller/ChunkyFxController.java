@@ -143,6 +143,7 @@ public class ChunkyFxController
   @FXML private MenuItem deleteChunks;
 
   @FXML private CheckMenuItem showGuides;
+  @FXML private CheckMenuItem lockCameraAngle;
   @FXML private Menu canvasScale;
   @FXML private RadioMenuItem percent25;
   @FXML private RadioMenuItem percent50;
@@ -524,6 +525,11 @@ public class ChunkyFxController
       canvas.syncShowGuides(newValue);
     });
 
+    lockCameraAngle.setSelected(false);
+    lockCameraAngle.selectedProperty().addListener((observable, oldValue, newValue) -> {
+      canvas.syncLockCameraAngle(newValue);
+    });
+
     percent25.setSelected(PersistentSettings.getCanvasScale() == 25 && !fitToScreen);
     percent50.setSelected(PersistentSettings.getCanvasScale() == 50 && !fitToScreen);
     percent75.setSelected(PersistentSettings.getCanvasScale() == 75 && !fitToScreen);
@@ -846,6 +852,10 @@ public class ChunkyFxController
 
   public void syncShowGuides(boolean value) {
     showGuides.setSelected(value);
+  }
+
+  public void syncLockCameraAngle(boolean value) {
+    lockCameraAngle.setSelected(value);
   }
 
   public void syncCanvasScale(int percent) {

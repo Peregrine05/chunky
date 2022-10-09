@@ -35,6 +35,7 @@
     </Menu>
     <Menu mnemonicParsing="false" text="Render Preview">
       <CheckMenuItem fx:id="showGuides" mnemonicParsing="false" text="Show guides"/>
+      <CheckMenuItem fx:id="lockCameraAngle" mnemonicParsing="false" text="Lock camera angle"/>
       <Menu mnemonicParsing="false" text="Canvas scale">
         <fx:define>
           <ToggleGroup fx:id="scaleGroup" />

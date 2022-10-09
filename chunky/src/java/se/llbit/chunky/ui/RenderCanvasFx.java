@@ -87,6 +87,8 @@ public class RenderCanvasFx extends ScrollPane implements Repaintable, SceneStat
   private Line vGuide1 = new Line();
   private Line vGuide2 = new Line();
 
+  CheckMenuItem lockCameraAngle = new CheckMenuItem("Lock camera angle");
+
   private RadioMenuItem percent25 = new RadioMenuItem(String.format("%d%%", 25));
   private RadioMenuItem percent50 = new RadioMenuItem(String.format("%d%%", 50));
   private RadioMenuItem percent75 = new RadioMenuItem(String.format("%d%%", 75));
@@ -163,8 +165,8 @@ public class RenderCanvasFx extends ScrollPane implements Repaintable, SceneStat
     });
 
     canvas.setOnMouseDragged(e -> {
-      if (e.isSecondaryButtonDown()) {
-        // do not drag when right-clicking
+      if (e.isSecondaryButtonDown() | lockCameraAngle.isSelected()) {
+        // do not drag when right-clicking or when the camera angle is locked
         return;
       }
       double dx = lastX - (int) e.getX();
@@ -200,6 +202,12 @@ public class RenderCanvasFx extends ScrollPane implements Repaintable, SceneStat
       chunkyFxController.syncShowGuides(newValue);
     });
     contextMenu.getItems().add(showGuides);
+
+    lockCameraAngle.setSelected(false);
+    lockCameraAngle.selectedProperty().addListener((observable, oldValue, newValue) -> {
+      chunkyFxController.syncLockCameraAngle(newValue);
+    });
+    contextMenu.getItems().add(lockCameraAngle);
 
     Menu canvasScale = new Menu("Canvas scale");
     ToggleGroup scaleGroup = new ToggleGroup();
@@ -440,6 +448,10 @@ public class RenderCanvasFx extends ScrollPane implements Repaintable, SceneStat
 
   public void syncFitToScreen() {
     fit.setSelected(true);
+  }
+
+  public void syncLockCameraAngle(boolean value) {
+    lockCameraAngle.setSelected(value);
   }
 
   private void updateCanvasPane() {
