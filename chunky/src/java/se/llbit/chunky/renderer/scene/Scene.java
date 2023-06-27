@@ -118,7 +118,7 @@ public class Scene implements JsonSerializable, Refreshable {
   /**
    * Default emitter intensity.
    */
-  public static final double DEFAULT_EMITTER_INTENSITY = 1;
+  public static final double DEFAULT_EMITTER_INTENSITY = 3.6;
 
   /**
    * Minimum emitter intensity.
@@ -133,7 +133,7 @@ public class Scene implements JsonSerializable, Refreshable {
   /**
    * Default emitter light intensity.
    */
-  public static final double DEFAULT_EMITTER_LIGHT_INTENSITY = 13;
+  public static final double DEFAULT_EMITTER_LIGHT_INTENSITY = 3.6;
 
   /**
    * Minimum emitter light intensity.
