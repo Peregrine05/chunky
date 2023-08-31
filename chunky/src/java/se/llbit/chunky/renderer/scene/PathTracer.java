@@ -226,21 +226,20 @@ public class PathTracer implements RayTracer {
 
   private static boolean doDiffuseReflection(Ray ray, Ray next, Material currentMat, Vector4 cumulativeColor, int addEmitted, Random random, WorkerState state, Scene scene) {
     boolean hit = false;
-    float emittance = 0;
+    double apparentBrightness = 0;
     Vector4 indirectEmitterColor = new Vector4(0, 0, 0, 0);
 
     if (scene.emittersEnabled && (!scene.isPreventNormalEmitterWithSampling() || scene.getEmitterSamplingStrategy() == EmitterSamplingStrategy.NONE || ray.depth == 0) && currentMat.emittance > Ray.EPSILON) {
 
-      emittance = addEmitted;
+      apparentBrightness = addEmitted * currentMat.emittance * currentMat.apparentBrightnessModifier * scene.apparentEmitterBrightness * scene.emitterIntensity;
       ray.emittance.x = ray.color.x * ray.color.x *
-        currentMat.emittance * scene.emitterIntensity;
+          currentMat.emittance * scene.emitterLightIntensity * scene.emitterIntensity;
       ray.emittance.y = ray.color.y * ray.color.y *
-        currentMat.emittance * scene.emitterIntensity;
+          currentMat.emittance * scene.emitterLightIntensity * scene.emitterIntensity;
       ray.emittance.z = ray.color.z * ray.color.z *
-        currentMat.emittance * scene.emitterIntensity;
-
+          currentMat.emittance * scene.emitterLightIntensity * scene.emitterIntensity;
       hit = true;
-    } else if (scene.emittersEnabled && scene.emitterSamplingStrategy != EmitterSamplingStrategy.NONE && scene.getEmitterGrid() != null) {
+    } else if(scene.emittersEnabled && scene.emitterSamplingStrategy != EmitterSamplingStrategy.NONE && scene.getEmitterGrid() != null) {
       // Sample emitter
       switch (scene.emitterSamplingStrategy) {
         case ONE:
@@ -296,11 +295,11 @@ public class PathTracer implements RayTracer {
       next.diffuseReflection(ray, random);
       hit = pathTrace(scene, next, state, 0, false) || hit;
       if (hit) {
-        cumulativeColor.x += ray.color.x * (emittance + directLightR * scene.sun.emittance.x + (
+        cumulativeColor.x += ray.color.x * (apparentBrightness + directLightR * scene.sun.emittance.x + (
           next.color.x + next.emittance.x) + (indirectEmitterColor.x));
-        cumulativeColor.y += ray.color.y * (emittance + directLightG * scene.sun.emittance.y + (
+        cumulativeColor.y += ray.color.y * (apparentBrightness + directLightG * scene.sun.emittance.y + (
           next.color.y + next.emittance.y) + (indirectEmitterColor.y));
-        cumulativeColor.z += ray.color.z * (emittance + directLightB * scene.sun.emittance.z + (
+        cumulativeColor.z += ray.color.z * (apparentBrightness + directLightB * scene.sun.emittance.z + (
           next.color.z + next.emittance.z) + (indirectEmitterColor.z));
       } else if (indirectEmitterColor.x > Ray.EPSILON || indirectEmitterColor.y > Ray.EPSILON || indirectEmitterColor.z > Ray.EPSILON) {
         hit = true;
@@ -314,9 +313,9 @@ public class PathTracer implements RayTracer {
 
       hit = pathTrace(scene, next, state, 0, false) || hit;
       if (hit) {
-        cumulativeColor.x += ray.color.x * (emittance + (next.color.x + next.emittance.x) + (indirectEmitterColor.x));
-        cumulativeColor.y += ray.color.y * (emittance + (next.color.y + next.emittance.y) + (indirectEmitterColor.y));
-        cumulativeColor.z += ray.color.z * (emittance + (next.color.z + next.emittance.z) + (indirectEmitterColor.z));
+        cumulativeColor.x += ray.color.x * (apparentBrightness + (next.color.x + next.emittance.x) + (indirectEmitterColor.x));
+        cumulativeColor.y += ray.color.y * (apparentBrightness + (next.color.y + next.emittance.y) + (indirectEmitterColor.y));
+        cumulativeColor.z += ray.color.z * (apparentBrightness + (next.color.z + next.emittance.z) + (indirectEmitterColor.z));
       } else if (indirectEmitterColor.x > Ray.EPSILON || indirectEmitterColor.y > Ray.EPSILON || indirectEmitterColor.z > Ray.EPSILON) {
         hit = true;
         cumulativeColor.x += ray.color.x * indirectEmitterColor.x;
@@ -517,6 +516,7 @@ public class PathTracer implements RayTracer {
         e *= pos.block.surfaceArea(face);
         e *= emitterRay.getCurrentMaterial().emittance;
         e *= scene.emitterIntensity;
+        e *= scene.emitterLightIntensity;
         e *= scaler;
 
         result.scaleAdd(e, emitterRay.color);
