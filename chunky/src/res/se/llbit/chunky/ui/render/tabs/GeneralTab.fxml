@@ -48,17 +48,17 @@
     <Button fx:id="reloadChunks" mnemonicParsing="false" text="Reload chunks" maxWidth="1.7976931348623157E308"
             HBox.hgrow="ALWAYS"/>
   </HBox>
-  <TitledPane animated="false" text="Scene Y clip">
+  <TitledPane animated="false" text="Scene Y-clip">
     <GridPane hgap="10.0">
       <columnConstraints>
         <ColumnConstraints percentWidth="50"/>
         <ColumnConstraints percentWidth="50"/>
       </columnConstraints>
-      <IntegerAdjuster fx:id="yMin" name="Min Y level" alignment="CENTER_LEFT"
+      <IntegerAdjuster fx:id="yMin" name="Min Y-level" alignment="CENTER_LEFT"
                        GridPane.rowIndex="0" GridPane.columnIndex="0"/>
-      <IntegerAdjuster fx:id="yMax" name="Max Y level" alignment="CENTER_LEFT"
+      <IntegerAdjuster fx:id="yMax" name="Max Y-level" alignment="CENTER_LEFT"
                        GridPane.rowIndex="0" GridPane.columnIndex="1"/>
-      <Text fx:id="yClipInvalid" styleClass="invalid" managed="false" visible="false">Min Y level must be smaller than Max Y level.</Text>
+      <Text fx:id="yClipInvalid" styleClass="invalid" managed="false" visible="false">Min Y-level must be smaller than Max Y-level.</Text>
     </GridPane>
   </TitledPane>
   <TitledPane animated="false" text="Load entities">

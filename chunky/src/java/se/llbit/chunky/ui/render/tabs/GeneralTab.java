@@ -189,6 +189,12 @@ public class GeneralTab extends RenderControlsTab implements Initializable {
     canvasSizeInput.setSize(scene.canvasConfig.getCropWidth(), scene.canvasConfig.getCropHeight());
   }
 
+  @Override
+  public void onChunksLoaded() {
+    yMin.set(scene.getYClipMin());
+    yMax.set(scene.getYClipMax());
+  }
+
   @Override public String getTabTitle() {
     return "Scene";
   }
@@ -581,14 +587,10 @@ public class GeneralTab extends RenderControlsTab implements Initializable {
   private void updateYClipSlidersRanges(World world) {
     if (world != null && world.getVersionId() >= World.VERSION_21W06A) {
       yMin.setRange(-64, 320);
-      yMin.set(-64);
       yMax.setRange(-64, 320);
-      yMax.set(320);
     } else {
       yMin.setRange(0, 256);
-      yMin.set(0);
       yMax.setRange(0, 256);
-      yMax.set(256);
     }
   }
 }
