@@ -1,7 +1,6 @@
 package se.llbit.chunky.entity;
 
 import se.llbit.chunky.model.builder.BoxModelBuilder;
-import se.llbit.chunky.model.builder.UVMapHelper;
 import se.llbit.chunky.resources.Texture;
 import se.llbit.chunky.world.material.TextureMaterial;
 import se.llbit.json.JsonObject;
@@ -9,7 +8,6 @@ import se.llbit.json.JsonValue;
 import se.llbit.math.Constants;
 import se.llbit.math.Quad;
 import se.llbit.math.QuickMath;
-import se.llbit.math.Ray;
 import se.llbit.math.Transform;
 import se.llbit.math.Vector3;
 import se.llbit.math.primitive.Primitive;
@@ -25,8 +23,7 @@ public class SquidEntity extends Entity implements Poseable {
   private static final Quad[] body = new BoxModelBuilder()
     .addBox(new Vector3(-6 / 16.0, -3 / 16.0, -6 / 16.0), new Vector3(6 / 16.0, 13 / 16.0, 6 / 16.0), box ->
       box.forTextureSize(Texture.squid, 64, 32).atUVCoordinates(0, 0).flipX()
-        .addTopFace().addBottomFace(UVMapHelper.Side::flipY).addLeftFace().addRightFace().addFrontFace().addBackFace()
-        .transform(Transform.NONE)
+        .addTopFace().addBottomFace().addLeftFace().addRightFace().addFrontFace().addBackFace()
     ).toQuads();
 
   private static final Quad[] tentacle = new BoxModelBuilder()

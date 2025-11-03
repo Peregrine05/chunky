@@ -204,20 +204,17 @@ public class Vector3 {
     return new Vector3(x * s, y * s, z * s);
   }
 
-  public final Vector3 rMultiplyEntrywise(Vector3 other) {
-    return new Vector3(this.x * other.x, this.y * other.y, this.z * other.z);
-  }
-
-  public final void multiplyEntrywise(Vector3 other) {
-    this.x *= other.x;
-    this.y *= other.y;
-    this.z *= other.z;
+  /**
+   * Returns the entrywise product of this vector with the given vector.
+   */
+  public final Vector3 rMultiplyEntrywise(Vector3 v) {
+    return new Vector3(x * v.x, y * v.y, z * v.z);
   }
 
   /**
-   * Scale each component of this vector by v
+   * Multiply this vector component-wise with the given vector.
    */
-  public final void scaleEntrywise(Vector3 v) {
+  public final void multiplyEntrywise(Vector3 v) {
     x *= v.x;
     y *= v.y;
     z *= v.z;

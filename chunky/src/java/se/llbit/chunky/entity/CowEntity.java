@@ -1,7 +1,6 @@
 package se.llbit.chunky.entity;
 
 import se.llbit.chunky.model.builder.BoxModelBuilder;
-import se.llbit.chunky.model.builder.UVMapHelper;
 import se.llbit.chunky.resources.Texture;
 import se.llbit.chunky.world.material.TextureMaterial;
 import se.llbit.json.JsonObject;
@@ -23,31 +22,21 @@ public class CowEntity extends Entity implements Poseable, Variant {
   private static final Quad[] body = new BoxModelBuilder()
     .addBox(new Vector3(-6 / 16.0, -9 / 16.0, -5 / 16.0), new Vector3(6 / 16.0, 9 / 16.0, 5 / 16.0), box ->
       box.forTextureSize(Texture.cow, 64, 64).atUVCoordinates(18, 4).flipX()
-        .addTopFace().addBottomFace(UVMapHelper.Side::flipY).addLeftFace().addRightFace().addFrontFace().addBackFace()
-        .transform(Transform.NONE
-          .translate(0.5, 0.5, 0.5)
-          .rotateX(Math.toRadians(-90))
-          .translate(-0.5, -0.5, -0.5)
-        )
+        .addTopFace().addBottomFace().addLeftFace().addRightFace().addFrontFace().addBackFace()
+        .transform(Transform.NONE.rotateX(Math.toRadians(-90)))
     ).addBox(new Vector3(-2 / 16.0, -9 / 16.0, -6 / 16.0), new Vector3(2 / 16.0, -3 / 16.0, -5 / 16.0), box ->
       box.forTextureSize(Texture.cow, 64, 64).atUVCoordinates(52, 0).flipX()
         .addTopFace().addBottomFace().addLeftFace().addRightFace().addFrontFace().addBackFace()
-        .transform(Transform.NONE
-          .translate(0.5, 0.5, 0.5)
-          .rotateX(Math.toRadians(-90))
-          .translate(-0.5, -0.5, -0.5)
-        )
+        .transform(Transform.NONE.rotateX(Math.toRadians(-90)))
     ).toQuads();
 
   private static final Quad[] cold_wool = new BoxModelBuilder()
     .addBox(new Vector3(-6 / 16.0, -9 / 16.0, -5 / 16.0), new Vector3(6 / 16.0, 9 / 16.0, 5 / 16.0), box ->
       box.forTextureSize(Texture.cow, 64, 64).atUVCoordinates(20, 32).flipX()
-        .addTopFace().addBottomFace(UVMapHelper.Side::flipY).addLeftFace().addRightFace().addFrontFace().addBackFace()
+        .addTopFace().addBottomFace().addLeftFace().addRightFace().addFrontFace().addBackFace()
         .transform(Transform.NONE
-          .translate(0.5, 0.5, 0.5)
           .rotateX(Math.toRadians(-90))
           .inflate(new Vector3(13 / 12.0, 11 / 10.0, 19 / 18.0))
-          .translate(-0.5, -0.5, -0.5)
         )
     ).toQuads();
 
@@ -83,18 +72,14 @@ public class CowEntity extends Entity implements Poseable, Variant {
       box.forTextureSize(Texture.cow, 64, 64).atUVCoordinates(0, 32).flipX()
         .addTopFace().addBottomFace().addLeftFace().addRightFace().addFrontFace().addBackFace()
         .transform(Transform.NONE
-          .translate(0.5, 0.5, 0.5)
           .rotateX(Math.toRadians(-90))
-          .translate(-0.5, -0.5, -0.5)
           .translate(-6 / 16.0, 2 / 16.0, -2 / 16.0)
         )
     ).addBox(new Vector3(0 / 16.0, 0 / 16.0, 0 / 16.0), new Vector3(2 / 16.0, 6 / 16.0, 2 / 16.0), box ->
       box.forTextureSize(Texture.cow, 64, 64).atUVCoordinates(0, 40).flipX()
         .addTopFace().addBottomFace().addLeftFace().addRightFace().addFrontFace().addBackFace()
         .transform(Transform.NONE
-          .translate(0.5, 0.5, 0.5)
           .rotateX(Math.toRadians(-90))
-          .translate(-0.5, -0.5, -0.5)
           .translate(4 / 16.0, 2 / 16.0, -2 / 16.0)
         )
     ).toQuads();
