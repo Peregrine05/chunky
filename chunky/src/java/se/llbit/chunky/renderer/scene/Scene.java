@@ -1645,7 +1645,7 @@ public class Scene implements Configurable {
     int zcenter = (zmax + zmin) / 2;
     int ycenter = (yMax + yMin) / 2;
     for (int y = Math.min(ycenter+127, yMax); y >= Math.max(ycenter-128, yMin); --y) {
-      Material block = worldOctree.getMaterial(xcenter - origin.x, y - origin.y, zcenter - origin.z,
+      Block block = worldOctree.getBlock(xcenter - origin.x, y - origin.y, zcenter - origin.z,
           palette);
       if (block != Void.INSTANCE && block != Air.INSTANCE) {
         return new Vector3(xcenter, y + 5, zcenter);
@@ -2767,7 +2767,7 @@ public class Scene implements Configurable {
       int x = (int) QuickMath.floor(ray.o.x);
       int y = (int) QuickMath.floor(ray.o.y);
       int z = (int) QuickMath.floor(ray.o.z);
-      Material block = worldOctree.getMaterial(x, y, z, palette);
+      Block block = worldOctree.getBlock(x, y, z, palette);
       return block.isWater()
           && ((Water) block).isInside(ray);
     }

@@ -59,7 +59,10 @@ public class Octree implements Intersectable {
 
   public interface OctreeImplementation {
     void set(int type, int x, int y, int z);
-    Material getMaterial(int x, int y, int z, BlockPalette palette);
+    @Deprecated(forRemoval = true) Material getMaterial(int x, int y, int z, BlockPalette palette);
+    default Block getBlock(int x, int y, int z, BlockPalette palette) {
+      return (Block) getMaterial(x, y, z, palette);
+    }
     void store(DataOutputStream output) throws IOException;
     int getDepth();
     long nodeCount();
@@ -288,18 +291,18 @@ public class Octree implements Intersectable {
   }
 
   /**
-   * Get the material at the given position (relative to the octree origin).
+   * Get the block at the given position (relative to the octree origin).
    * @param x x position
    * @param y y position
    * @param z z position
    * @param palette Block palette
-   * @return Material at the given position or {@link Void#INSTANCE} if the position is outside of this octree
+   * @return Block at the given position or {@link Void#INSTANCE} if the position is outside of this octree
    */
-  public Material getMaterial(int x, int y, int z, BlockPalette palette) {
+  public Block getBlock(int x, int y, int z, BlockPalette palette) {
     int size = (1 << implementation.getDepth());
     if(x < 0 || y < 0 || z < 0 || x >= size || y >= size || z >= size)
       return Void.INSTANCE;
-    return implementation.getMaterial(x, y, z, palette);
+    return implementation.getBlock(x, y, z, palette);
   }
 
   /**
