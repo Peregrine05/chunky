@@ -53,7 +53,7 @@ public record BlockSpec(Tag tag) implements Comparable<BlockSpec> {
 
   private Block maybeWaterlogged(Block block) {
     if (tag.get("Properties").get("waterlogged").stringValue("").equals("true")) {
-      block.waterlogged = true;
+      return block.applyWaterlogging();
     }
     return block;
   }

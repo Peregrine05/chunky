@@ -1111,7 +1111,7 @@ public class Scene implements Configurable {
                         }
 
                         if (!block.isBlockWithEntity()) {
-                          if (block.waterlogged) {
+                          if (block.isWaterlogged()) {
                             block = palette.water;
                             octNode = palette.waterId;
                           } else {

@@ -205,10 +205,9 @@ public abstract class Material {
    */
   public final Texture texture;
 
-  /**
-   * Whether this block is waterlogged.
-   */
-  public boolean waterlogged = false;
+  public boolean refractive = false;
+
+  protected boolean waterlogged = false;
 
   public Material(String name, Texture texture) {
     this.name = name;
@@ -346,9 +345,10 @@ public abstract class Material {
     return false;
   }
 
-  /**
-   * Whether this material is waterlogged or a water block.
-   */
+  public boolean isWaterlogged() {
+    return waterlogged;
+  }
+
   public boolean isWaterFilled() {
     return waterlogged || isWater();
   }

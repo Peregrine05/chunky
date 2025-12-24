@@ -530,20 +530,6 @@ public class BlockPalette {
       block.addRefColorGammaCorrected(248, 236, 219, 0.3f);
       block.setLightLevel(14);
     });
-    materialProperties.put("minecraft:kelp", block -> {
-      block.waterlogged = true;
-    });
-    materialProperties.put("minecraft:kelp_plant", block -> {
-      block.waterlogged = true;
-    });
-    materialProperties.put("minecraft:seagrass", block -> {
-      block.waterlogged = true;
-      block.subSurfaceScattering = 0.3f;
-    });
-    materialProperties.put("minecraft:tall_seagrass", block -> {
-      block.waterlogged = true;
-      block.subSurfaceScattering = 0.3f;
-    });
     materialProperties.put("minecraft:sea_pickle", block -> {
       if (block instanceof SeaPickle) {
         if (((SeaPickle) block).live) {
@@ -809,6 +795,10 @@ public class BlockPalette {
     materialProperties.put("minecraft:azalea_leaves", foliageConfig);
     materialProperties.put("minecraft:flowering_azalea_leaves", foliageConfig);
     materialProperties.put("minecraft:sweet_berry_bush", foliageConfig);
+    materialProperties.put("minecraft:kelp", foliageConfig);
+    materialProperties.put("minecraft:kelp_plant", foliageConfig);
+    materialProperties.put("minecraft:seagrass", foliageConfig);
+    materialProperties.put("minecraft:tall_seagrass", foliageConfig);
     materialProperties.put("minecraft:glow_lichen", block -> {
       block.setLightLevel(1);
       block.subSurfaceScattering = 0.3f;

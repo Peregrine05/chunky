@@ -18,6 +18,7 @@
 
 package se.llbit.chunky.block.minecraft;
 
+import se.llbit.chunky.block.Block;
 import se.llbit.chunky.block.MinecraftBlockTranslucent;
 import se.llbit.chunky.model.minecraft.WaterModel;
 import se.llbit.chunky.renderer.scene.Scene;
@@ -92,5 +93,10 @@ public class Water extends MinecraftBlockTranslucent {
     Ray ray = new Ray();
     ray.o.set(x, y, z);
     return isInside(ray);
+  }
+
+  @Override
+  public Block applyWaterlogging() {
+    return this;
   }
 }

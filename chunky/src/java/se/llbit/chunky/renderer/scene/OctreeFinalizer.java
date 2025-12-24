@@ -92,31 +92,39 @@ public class OctreeFinalizer {
         int cornerNE = level0;
         int cornerNW = level0;
 
+        // west
         int level = waterLevelAt(worldTree, palette, loadedChunks, x - 1, y, z, level0);
         cornerNW += level;
         cornerSW += level;
 
+        // south west
         level = waterLevelAt(worldTree, palette, loadedChunks, x - 1, y, z + 1, level0);
         cornerSW += level;
 
+        // south
         level = waterLevelAt(worldTree, palette, loadedChunks, x, y, z + 1, level0);
         cornerSW += level;
         cornerSE += level;
 
+        // south east
         level = waterLevelAt(worldTree, palette, loadedChunks, x + 1, y, z + 1, level0);
         cornerSE += level;
 
+        // east
         level = waterLevelAt(worldTree, palette, loadedChunks, x + 1, y, z, level0);
         cornerSE += level;
         cornerNE += level;
 
+        // north east
         level = waterLevelAt(worldTree, palette, loadedChunks, x + 1, y, z - 1, level0);
         cornerNE += level;
 
+        // north
         level = waterLevelAt(worldTree, palette, loadedChunks, x, y, z - 1, level0);
         cornerNE += level;
         cornerNW += level;
 
+        // north west
         level = waterLevelAt(worldTree, palette, loadedChunks, x - 1, y, z - 1, level0);
         cornerNW += level;
 
@@ -194,11 +202,11 @@ public class OctreeFinalizer {
     }
 
     Material corner = worldTree.getMaterial(x, cy, z, palette);
-    if (corner instanceof Water) {
+    if (corner.isWater()) {
       Material above = worldTree.getMaterial(x, cy + 1, z, palette);
       boolean isFullBlock = above.isWaterFilled();
       return isFullBlock ? 8 : 8 - ((Water) corner).level;
-    } else if (corner.waterlogged) {
+    } else if (corner.isWaterlogged()) {
       return 8;
     } else if (!worldTree.getMaterial(x, cy, z, palette).solid) {
       return 0;
