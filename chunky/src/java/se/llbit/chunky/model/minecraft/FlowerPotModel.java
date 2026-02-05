@@ -77,7 +77,8 @@ public class FlowerPotModel extends QuadModel {
     CHERRY_SAPLING,
     PALE_OAK_SAPLING,
     CLOSED_EYEBLOSSOM,
-    OPEN_EYEBLOSSOM
+    OPEN_EYEBLOSSOM,
+    GOLDEN_DANDELION,
   }
 
   private static final Texture flowerpot = Texture.flowerPot;
@@ -638,6 +639,9 @@ public class FlowerPotModel extends QuadModel {
             break;
           case CLOSED_EYEBLOSSOM:
             Arrays.fill(textures, flowerPotTex.length, textures.length, Texture.closedEyeblossom);
+            break;
+          case GOLDEN_DANDELION:
+            Arrays.fill(textures, flowerPotTex.length, textures.length, Texture.goldenDandelion);
             break;
         }
         break;
