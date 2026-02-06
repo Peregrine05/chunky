@@ -408,11 +408,13 @@ public class BlockPalette {
     materialProperties.put("minecraft:green_glazed_terracotta", glassConfig);
     materialProperties.put("minecraft:red_glazed_terracotta", glassConfig);
     materialProperties.put("minecraft:black_glazed_terracotta", glassConfig);
-    materialProperties.put("minecraft:gold_block", block -> {
+    Consumer<Block> goldConfig = block -> {
       block.specular = 1.0f;
       block.metalness = 0.96f;
       block.setPerceptualSmoothness(0.9);
-    });
+    };
+    materialProperties.put("minecraft:gold_block", goldConfig);
+    materialProperties.put("minecraft:light_weighted_pressure_plate", goldConfig);
     materialProperties.put("minecraft:raw_gold_block", block -> {
       block.specular = 0.8f;
       block.metalness = 1.0f;
@@ -427,6 +429,7 @@ public class BlockPalette {
       block.setPerceptualSmoothness(0.9);
     };
     materialProperties.put("minecraft:iron_block", ironConfig);
+    materialProperties.put("minecraft:heavy_weighted_pressure_plate", ironConfig);
     materialProperties.put("minecraft:raw_iron_block", block -> {
       block.specular = 0.66f;
       block.metalness = 1.0f;
