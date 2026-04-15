@@ -509,6 +509,7 @@ public class Octree implements Intersectable {
     // Marching is done in a top-down fashion: at each step, the octree is descended from the root to find the leaf
     // node the ray is in. Terminating the march is then decided based on the block type in that leaf node. Finally the
     // ray is advanced to the boundary of the current leaf node and the next, ready for the next iteration.
+    Material prevBlock = ray.getCurrentMedium();
     while (true) {
       // Add small offset past the intersection to avoid
       // recursion to the same octree node!
@@ -520,7 +521,6 @@ public class Octree implements Intersectable {
 
       if (!isInside(pos)) {
         Block currentBlock = scene.isUnderWaterPlane(pos) ? WaterPlaneMaterial.INSTANCE : Void.INSTANCE;
-        Material prevBlock = ray.getCurrentMedium();
         if (currentBlock.isSameMaterial(prevBlock)
             || currentBlock == Void.INSTANCE && prevBlock == Air.INSTANCE) {
           return false;
@@ -546,7 +546,6 @@ public class Octree implements Intersectable {
       if (scene.isUnderWaterPlane(pos) && (currentBlock == Air.INSTANCE || currentBlock == Void.INSTANCE)) {
         currentBlock = WaterPlaneMaterial.INSTANCE;
       }
-      Material prevBlock = ray.getCurrentMedium();
 
       intersectionRecord.material = currentBlock;
 
@@ -571,8 +570,8 @@ public class Octree implements Intersectable {
             intersectionRecord.distance = distance;
             return true;
           }
-          // Set ray medium to currentBlock (which is either Air or Void), but don't intersect.
-          ray.setCurrentMedium(currentBlock);
+          // Set prevBlock to currentBlock (which is either Air or Void), but don't intersect.
+          prevBlock = currentBlock;
         }
       }
 
