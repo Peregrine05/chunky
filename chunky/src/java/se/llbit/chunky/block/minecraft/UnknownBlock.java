@@ -22,12 +22,30 @@ import se.llbit.chunky.renderer.scene.Scene;
 import se.llbit.chunky.resources.Texture;
 import se.llbit.math.IntersectionRecord;
 import se.llbit.math.Ray;
+import se.llbit.nbt.NamedTag;
+import se.llbit.nbt.Tag;
 
 public class UnknownBlock extends SpriteBlock {
   public static final UnknownBlock UNKNOWN = new UnknownBlock("?");
+  private final String description;
 
   public UnknownBlock(String name) {
     super(name, Texture.unknown);
+    description = "";
+  }
+
+  public UnknownBlock(String name, Tag tag) {
+    super(name, Texture.unknown);
+    StringBuilder descriptionBuilder = new StringBuilder();
+    for (NamedTag property : tag.get("Properties").asCompound()) {
+      if (!descriptionBuilder.isEmpty()) {
+        descriptionBuilder.append(", ");
+      }
+      descriptionBuilder.append(property.name);
+      descriptionBuilder.append("=");
+      descriptionBuilder.append(property.tag.stringValue("?"));
+    }
+    this.description = descriptionBuilder.toString();
   }
 
   @Override
@@ -36,5 +54,10 @@ public class UnknownBlock extends SpriteBlock {
       return false;
     }
     return super.intersect(ray, intersectionRecord, scene);
+  }
+
+  @Override
+  public String description() {
+    return description;
   }
 }

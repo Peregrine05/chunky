@@ -48,7 +48,7 @@ public record BlockSpec(Tag tag) implements Comparable<BlockSpec> {
         return maybeWaterlogged(block);
       }
     }
-    return new UnknownBlock(name);
+    return new UnknownBlock(name, tag);
   }
 
   private Block maybeWaterlogged(Block block) {
