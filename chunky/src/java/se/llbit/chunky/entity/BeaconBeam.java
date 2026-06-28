@@ -71,11 +71,12 @@ public class BeaconBeam extends Entity implements Poseable {
 
   private final JsonObject pose;
   private double scale = 1;
-  private int height = 256;
+  private int height;
   private final Int2ObjectOpenHashMap<BeaconBeamMaterial> materials = new Int2ObjectOpenHashMap<>();
 
   public BeaconBeam(Vector3 position) {
     super(position);
+    this.height = 2048 - (int) position.y;
     this.pose = new JsonObject();
     pose.add("all", JsonUtil.vec3ToJson(new Vector3(0, 0, 0)));
   }
