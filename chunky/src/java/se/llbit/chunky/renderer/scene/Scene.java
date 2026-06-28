@@ -1830,6 +1830,22 @@ public class Scene implements Configurable, Refreshable {
     }
   }
 
+  public Vector3 getTargetColor(double x, double y) {
+    Ray ray = new Ray();
+
+    camera.calcViewRay(ray, x, y);
+    ray.o.x -= origin.x;
+    ray.o.y -= origin.y;
+    ray.o.z -= origin.z;
+    ray.setCurrentMedium(getWorldMaterial(ray));
+
+    IntersectionRecord intersectionRecord = new IntersectionRecord();
+    if (!intersect(ray, intersectionRecord, null)) {
+      sky.intersect(ray, intersectionRecord);
+    }
+    return intersectionRecord.color.toVec3();
+  }
+
   /**
    * @return World origin in the Octree
    */
