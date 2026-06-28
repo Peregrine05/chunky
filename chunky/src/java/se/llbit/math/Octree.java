@@ -496,7 +496,7 @@ public class Octree implements Intersectable {
 
     // Check if we are in-bounds
     if (!isInside(ray.o)) {
-      if (ray.getCurrentMedium() != Void.INSTANCE) {
+      if (ray.getCurrentMedium() != Void.INSTANCE && ray.getCurrentMedium() != Air.INSTANCE) {
         return false;
       }
       double dist = enterOctree(ray, intersectionRecord);
@@ -568,6 +568,7 @@ public class Octree implements Intersectable {
             testRay.o.scaleAdd(distance, ray.d);
             TexturedBlockModel.getIntersectionColor(testRay, intersectionRecord);
             intersectionRecord.distance = distance;
+            ray.setCurrentMedium(prevBlock);
             return true;
           }
           // Set prevBlock to currentBlock (which is either Air or Void), but don't intersect.
