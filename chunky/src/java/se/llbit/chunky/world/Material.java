@@ -19,6 +19,7 @@ package se.llbit.chunky.world;
 import java.util.ArrayList;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -809,6 +810,8 @@ public abstract class Material {
     LuxColorPicker volumeColorPicker = new LuxColorPicker();
     DoubleAdjuster absorptionAdjuster = new DoubleAdjuster();
     LuxColorPicker absorptionColorPicker = new LuxColorPicker();
+    CheckBox opaqueCheckBox = new CheckBox();
+    ToggleSwitch hiddenSwitch = new ToggleSwitch();
 
     TableView<MaterialReferenceColorData> referenceColorTable = new TableView<>();
     Button addReferenceColor = new Button();
@@ -1030,6 +1033,20 @@ public abstract class Material {
         })
     );
 
+    opaqueCheckBox.setText("Opaque");
+    opaqueCheckBox.setSelected(material.opaque);
+    opaqueCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+      material.opaque = newValue;
+      scene.refresh();
+    });
+
+    hiddenSwitch.setText("Hidden");
+    hiddenSwitch.setSelected(material.hidden);
+    hiddenSwitch.selectedProperty().addListener((observable, oldValue, newValue) -> {
+      material.hidden = newValue;
+      scene.refresh();
+    });
+
     GridPane settings = new GridPane();
 
     ColumnConstraints columnConstraints = new ColumnConstraints();
@@ -1043,11 +1060,13 @@ public abstract class Material {
     VBox volumeSettings = new VBox(6, volumeDensityAdjuster, volumeAnisotropyAdjuster, volumeEmittanceAdjuster, volumeColorPicker, absorptionAdjuster, absorptionColorPicker);
     VBox specularSettings = new VBox(6, specularAdjuster, iorAdjuster, smoothnessAdjuster, transmissionSmoothnessAdjuster);
     VBox specularColorSettings = new VBox(6, metalnessAdjuster, transmissionMetalnessAdjuster, specularColorPicker, transmissionSpecularColorPicker);
+    VBox otherSettings = new VBox(6, opaqueCheckBox, hiddenSwitch);
 
     settings.add(diffuseSettings, 0, 0);
     settings.add(volumeSettings, 1, 0);
     settings.add(specularSettings, 0, 1);
     settings.add(specularColorSettings, 1, 1);
+    settings.add(otherSettings, 0, 2);
 
     final ArrayList<ChangeListener<Color>> referenceColorPickerListener = new ArrayList<>(1);
     referenceColorPickerListener.add((observable, oldValue, newValue) -> {});
