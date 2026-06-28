@@ -55,7 +55,8 @@ public class BlockPalette {
   public final int voidId, airId, stoneId, waterId;
   public static final int ANY_ID = Octree.ANY_TYPE;
 
-  private final Map<String, Consumer<Block>> materialProperties;
+  private final Map<BlockSpec, Consumer<Block>> materialProperties;
+  private final Map<String, Consumer<Block>> materialPropertiesByName;
   public static final Map<String, Consumer<Block>> DEFAULT_MATERIAL_PROPERTIES = getDefaultMaterialProperties();
 
   /**
@@ -72,6 +73,7 @@ public class BlockPalette {
     this.blockMap = initialMap;
     this.palette = initialList;
     this.materialProperties = new HashMap<>();
+    this.materialPropertiesByName = new HashMap<>();
     CompoundTag voidTag = new CompoundTag();
     voidTag.add("Name", new StringTag("minecraft:void"));
     CompoundTag airTag = new CompoundTag();
@@ -92,12 +94,17 @@ public class BlockPalette {
     this(new ConcurrentHashMap<>(), new CopyOnWriteArrayList<>());
   }
 
-  public BlockPalette(Map<String, JsonValue> materials) {
+  public BlockPalette(Map<BlockSpec, JsonValue> materials) {
     this();
-    materials.forEach((name, properties) -> {
-      materialProperties.put(name, block -> {
-        block.loadMaterialProperties(properties.asObject());
-      });
+    materials.forEach((blockSpec, properties) -> {
+      if (properties != null) {
+        materialProperties.put(blockSpec, block -> {
+          block.loadMaterialProperties(properties.asObject());
+        });
+        materialPropertiesByName.put(blockSpec.toBlock().name, block -> {
+          block.loadMaterialProperties(properties.asObject());
+        });
+      }
     });
   }
 
@@ -144,8 +151,8 @@ public class BlockPalette {
       id = palette.size();
       blockMap.put(spec, id);
       Block block = spec.toBlock();
-      applyMaterial(block);
       palette.add(block);
+      applyMaterial(spec);
       return id;
     } finally {
       lock.unlock();
@@ -171,6 +178,25 @@ public class BlockPalette {
       }
     }
     return null;
+  }
+
+  public int indexOf(BlockSpec blockSpec) {
+    return blockMap.getOrDefault(blockSpec, -1);
+  }
+
+  /**
+   * Get the block by its BlockSpec
+   * @return Palette material from BlockSpec
+   */
+  public Block getBlockFromBlockSpec(BlockSpec blockSpec) {
+    if (blockMap.containsKey(blockSpec)) {
+      return palette.get(blockMap.get(blockSpec));
+    }
+    return blockSpec.toBlock();
+  }
+
+  public Set<BlockSpec> blockSpecs() {
+    return Set.of(blockMap.keySet().toArray(new BlockSpec[0]));
   }
 
   /**
@@ -218,32 +244,60 @@ public class BlockPalette {
   /**
    * Updates the material properties of the block and applies them.
    *
-   * @param name       the id of the block to be updated, e.g. "minecraft:stone"
+   * @param blockSpec  the BlockSpec of the block to be updated
    * @param properties function that modifies the block's properties
    */
-  public void updateProperties(String name, Consumer<Block> properties) {
-    materialProperties.put(name, properties);
-    blockMap.forEach(
-      (spec, id) -> {
-        Block block = palette.get(id);
-        if (block.name.equals(name)) {
-          applyMaterial(block);
-        }
-      });
+  public void updateProperties(BlockSpec blockSpec, Consumer<Block> properties) {
+    materialProperties.put(blockSpec, properties);
+    materialPropertiesByName.put(blockSpec.toBlock().name, properties);
+    applyMaterial(blockSpec);
   }
 
   /**
    * Apply the material properties that were registered via <code>
-   * {@link #updateProperties(String, Consumer)}</code> to the given block.
+   * {@link #updateProperties(BlockSpec, Consumer)}</code> to the palette block identified by
+   * blockSpec.
    *
-   * @param block Block to apply the material configuration to
+   * @param blockSpec BlockSpec for the block to apply the material configuration to
+   */
+  private void applyMaterial(BlockSpec blockSpec) {
+    Block block = getBlockFromBlockSpec(blockSpec);
+    applyDefaultMaterialProperties(block);
+    applyRegisteredMaterialProperties(blockSpec, block);
+  }
+
+  /**
+   * Apply the default and registered material properties to the block.
    */
   public void applyMaterial(Block block) {
+    applyDefaultMaterialProperties(block);
+    applyRegisteredMaterialProperties(block);
+  }
+
+  /**
+   * Applies the default and registered material properties specified by blockSpec to block.
+   */
+  public void applyMaterial(BlockSpec blockSpec, Block block) {
+    applyDefaultMaterialProperties(block);
+    applyRegisteredMaterialProperties(blockSpec, block);
+  }
+
+  private void applyDefaultMaterialProperties(Block block) {
     Consumer<Block> defaultProperties = DEFAULT_MATERIAL_PROPERTIES.get(block.name);
     if (defaultProperties != null) {
       defaultProperties.accept(block);
     }
-    Consumer<Block> properties = materialProperties.get(block.name);
+  }
+
+  private void applyRegisteredMaterialProperties(BlockSpec blockSpec, Block block) {
+    Consumer<Block> properties = materialProperties.get(blockSpec);
+    if (properties != null) {
+      properties.accept(block);
+    }
+  }
+
+  private void applyRegisteredMaterialProperties(Block block) {
+    Consumer<Block> properties = materialPropertiesByName.get(block.name);
     if (properties != null) {
       properties.accept(block);
     }
@@ -251,10 +305,12 @@ public class BlockPalette {
 
   /**
    * Apply all material properties that were registered with <code>
-   * {@link #updateProperties(String, Consumer)}</code> for all blocks in this palette.
+   * {@link #updateProperties(BlockSpec, Consumer)}</code> for all blocks in this palette.
    */
   public void applyMaterials() {
-    palette.forEach(this::applyMaterial);
+    blockMap.forEach((blockSpec, id) -> {
+      applyMaterial(blockSpec);
+    });
   }
 
   /**
@@ -399,7 +455,8 @@ public class BlockPalette {
       block.addRefColorGammaCorrected(255, 255, 210, 0.35f);
       block.addRefColorGammaCorrected(255, 185, 0, 0.25f);
       block.addRefColorGammaCorrected(221, 0, 0, 0.3f);
-      if (block instanceof RedstoneTorch && ((RedstoneTorch) block).isLit()) {
+      if (block instanceof RedstoneTorch torch && torch.isLit()
+          || block instanceof RedstoneWallTorch wallTorch && wallTorch.isLit()) {
         block.setLightLevel(7);
       }
     };

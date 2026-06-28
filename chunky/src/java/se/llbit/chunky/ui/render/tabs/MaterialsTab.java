@@ -30,6 +30,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.util.Callback;
 import org.controlsfx.control.ToggleSwitch;
 import se.llbit.chunky.block.*;
 import se.llbit.chunky.block.minecraft.UnknownBlock;
@@ -98,8 +99,11 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
   private ChangeListener<? super MaterialReferenceColorData> referenceColorTableListener = (observable, oldValue, newValue) -> {};
   private ChangeListener<Color> referenceColorPickerListener = (observable, oldValue, newValue) -> {};
 
-
-  private final ListView<String> listView;
+  private ListView<BlockSpec> listView;
+  private ListView<String> extraMaterials;
+  private final TextField filterField = new TextField();
+  private final TextArea blockDetails = new TextArea();
+  private final Button applyToAll = new Button();
 
   public MaterialsTab() {
     emittance.setName("Emittance");
@@ -216,13 +220,7 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     blockIds.addAll(ExtraMaterials.idMap.keySet());
     blockIds.addAll(MaterialStore.blockIds);
 
-    FilteredList<String> filteredList = new FilteredList<>(
-      new SortedList<>(blockIds, Comparator.naturalOrder())
-    );
-    listView = new ListView<>(filteredList);
-    listView.getSelectionModel().selectedItemProperty().addListener(
-        (observable, oldValue, materialName) -> updateSelectedMaterial(materialName)
-    );
+    updateMaterialList(scene);
 
     GridPane settings = new GridPane();
 
@@ -245,24 +243,24 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     settings.add(specularColorSettings, 1, 1);
     settings.add(otherSettings, 0, 2);
 
-    TextField filterField = new TextField();
-    filterField.textProperty().addListener((observable, oldValue, newValue) -> {
-      if (newValue.trim().isEmpty()) {
-        filteredList.setPredicate(name -> true);
-      } else {
-        filteredList.setPredicate(name -> name.contains(newValue));
-      }
-    });
-
     HBox filterBox = new HBox();
     filterBox.setAlignment(Pos.BASELINE_LEFT);
     filterBox.setSpacing(10);
     filterBox.getChildren().addAll(new Label("Filter:"), filterField);
 
+    listView.setMaxHeight(150);
+    extraMaterials.setMaxHeight(150);
+    blockDetails.setMaxHeight(150);
+    blockDetails.setEditable(false);
+
+    applyToAll.setText("Apply changes to all blocks of same type");
+    applyToAll.setDisable(true);
+
     VBox listPane = new VBox();
-    listPane.setSpacing(10);
-    listPane.getChildren().addAll(filterBox, listView);
-    listPane.setPrefHeight(200);
+    listPane.setSpacing(6);
+    listPane.getChildren().addAll(filterBox, new Label("Extra materials"), extraMaterials,
+        new Label("Block palette"),  listView, new Label("Block details"),  blockDetails,
+        applyToAll);
 
     addReferenceColor.setText("Add reference color");
     removeReferenceColor.setText("Remove reference color");
@@ -420,56 +418,6 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
         hidden.setSelected(material.hidden);
         materialExists = true;
       }
-    } else if (MaterialStore.blockIds.contains(materialName)) {
-      Block block = new UnknownBlock(materialName.substring(10));
-      scene.getPalette().applyMaterial(block);
-      emittance.set(block.emittance);
-      emittanceColor.setColor(ColorUtil.toFx(block.emittanceColor));
-      emitterMappingOffset.set(block.emitterMappingOffset);
-      emitterMappingType.getSelectionModel().select(block.emitterMappingType);
-      useReferenceColors.setSelected(block.useReferenceColors);
-      if (block.emitterMappingReferenceColors != null && !block.emitterMappingReferenceColors.isEmpty()) {
-        block.emitterMappingReferenceColors.forEach(referenceColor -> referenceColorTable.getItems().add(new MaterialReferenceColorData(referenceColor)));
-      }
-      referenceColorTableListener = (observable, oldValue, newValue) -> {
-        if (newValue != null) {
-          referenceColorPicker.colorProperty().removeListener(referenceColorPickerListener);
-          referenceColorPicker.setColor(ColorUtil.toFx(newValue.getReferenceColor().toVec3()));
-          referenceColorPickerListener = (observable2, oldValue2, newValue2) -> {
-            Vector3 color = ColorUtil.fromFx(newValue2);
-            newValue.setReferenceColor(color);
-            setEmitterMappingReferenceColors(materialName);
-          };
-          referenceColorPicker.colorProperty().addListener(referenceColorPickerListener);
-          referenceColorRangeSlider.set(newValue.getReferenceColor().w * 255);
-          referenceColorRangeSlider.onValueChange(value -> {
-            newValue.setRange(value);
-            setEmitterMappingReferenceColors(materialName);
-          });
-        } else {
-          referenceColorRangeSlider.onValueChange(value -> {});
-        }
-      };
-      alpha.set(block.alpha);
-      subsurfaceScattering.set(block.subSurfaceScattering);
-      diffuseColor.setColor(ColorUtil.toFx(block.diffuseColor));
-      specular.set(block.specular);
-      ior.set(block.ior);
-      perceptualSmoothness.set(block.getPerceptualSmoothness());
-      perceptualTransmissionSmoothness.set(block.getPerceptualTransmissionSmoothness());
-      metalness.set(block.metalness);
-      transmissionMetalness.set(block.transmissionMetalness);
-      specularColor.setColor(ColorUtil.toFx(block.specularColor));
-      transmissionSpecularColor.setColor(ColorUtil.toFx(block.transmissionSpecularColor));
-      volumeDensity.set(block.volumeDensity);
-      volumeAnisotropy.set(block.volumeAnisotropy);
-      volumeEmittance.set(block.volumeEmittance);
-      volumeColor.setColor(ColorUtil.toFx(block.volumeColor));
-      absorption.set(block.absorption);
-      absorptionColor.setColor(ColorUtil.toFx(block.absorptionColor));
-      opaque.setSelected(block.opaque);
-      hidden.setSelected(block.hidden);
-      materialExists = true;
     }
     if (materialExists) {
       emittance.onValueChange(value -> scene.setEmittance(materialName, value.floatValue()));
@@ -487,10 +435,10 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
       specular.onValueChange(value -> scene.setSpecular(materialName, value.floatValue()));
       ior.onValueChange(value -> scene.setIor(materialName, value.floatValue()));
       perceptualSmoothness.onValueChange(
-        value -> scene.setPerceptualSmoothness(materialName, value.floatValue())
+          value -> scene.setPerceptualSmoothness(materialName, value.floatValue())
       );
       perceptualTransmissionSmoothness.onValueChange(
-        value -> scene.setPerceptualTransmissionSmoothness(materialName, value.floatValue())
+          value -> scene.setPerceptualTransmissionSmoothness(materialName, value.floatValue())
       );
       metalness.onValueChange(value -> scene.setMetalness(materialName, value.floatValue()));
       transmissionMetalness.onValueChange(value -> scene.setTransmissionMetalness(materialName, value.floatValue()));
@@ -546,15 +494,204 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     }
   }
 
+  private void updateSelectedMaterial2(BlockSpec blockSpec) {
+    if (blockSpec == null) {
+      applyToAll.setDisable(true);
+      blockDetails.clear();
+      return;
+    }
+
+    blockDetails.setText(blockSpec.details());
+
+    applyToAll.setDisable(false);
+    applyToAll.setOnAction(e -> scene.applyToAllOfType(blockSpec));
+
+    emittanceColor.colorProperty().removeListener(emittanceColorListener);
+    emitterMappingType.getSelectionModel().selectedItemProperty().removeListener(emitterMappingTypeListener);
+    useReferenceColors.selectedProperty().removeListener(useReferenceColorsListener);
+    diffuseColor.colorProperty().removeListener(diffuseColorListener);
+    specularColor.colorProperty().removeListener(specularColorListener);
+    transmissionSpecularColor.colorProperty().removeListener(transmissionSpecularColorListener);
+    volumeColor.colorProperty().removeListener(volumeColorListener);
+    absorptionColor.colorProperty().removeListener(absorptionColorListener);
+    opaque.selectedProperty().removeListener(opaqueListener);
+    hidden.selectedProperty().removeListener(hiddenListener);
+    referenceColorTable.getSelectionModel().selectedItemProperty().removeListener(referenceColorTableListener);
+    referenceColorTable.getItems().clear();
+    referenceColorPicker.colorProperty().removeListener(referenceColorPickerListener);
+
+    Block block = blockSpec.toBlock();
+    scene.getPalette().applyMaterial(blockSpec, block);
+    emittance.set(block.emittance);
+    emittanceColor.setColor(ColorUtil.toFx(block.emittanceColor));
+    emitterMappingOffset.set(block.emitterMappingOffset);
+    emitterMappingType.getSelectionModel().select(block.emitterMappingType);
+    useReferenceColors.setSelected(block.useReferenceColors);
+    if (block.emitterMappingReferenceColors != null && !block.emitterMappingReferenceColors.isEmpty()) {
+      block.emitterMappingReferenceColors.forEach(referenceColor -> referenceColorTable.getItems().add(new MaterialReferenceColorData(referenceColor)));
+    }
+    referenceColorTableListener = (observable, oldValue, newValue) -> {
+      if (newValue != null) {
+        referenceColorPicker.colorProperty().removeListener(referenceColorPickerListener);
+        referenceColorPicker.setColor(ColorUtil.toFx(newValue.getReferenceColor().toVec3()));
+        referenceColorPickerListener = (observable2, oldValue2, newValue2) -> {
+          Vector3 color = ColorUtil.fromFx(newValue2);
+          newValue.setReferenceColor(color);
+          setEmitterMappingReferenceColors(blockSpec);
+        };
+        referenceColorPicker.colorProperty().addListener(referenceColorPickerListener);
+        referenceColorRangeSlider.set(newValue.getReferenceColor().w * 255);
+        referenceColorRangeSlider.onValueChange(value -> {
+          newValue.setRange(value);
+          setEmitterMappingReferenceColors(blockSpec);
+        });
+      } else {
+        referenceColorRangeSlider.onValueChange(value -> {});
+      }
+    };
+    alpha.set(block.alpha);
+    subsurfaceScattering.set(block.subSurfaceScattering);
+    diffuseColor.setColor(ColorUtil.toFx(block.diffuseColor));
+    specular.set(block.specular);
+    ior.set(block.ior);
+    perceptualSmoothness.set(block.getPerceptualSmoothness());
+    perceptualTransmissionSmoothness.set(block.getPerceptualTransmissionSmoothness());
+    metalness.set(block.metalness);
+    transmissionMetalness.set(block.transmissionMetalness);
+    specularColor.setColor(ColorUtil.toFx(block.specularColor));
+    transmissionSpecularColor.setColor(ColorUtil.toFx(block.transmissionSpecularColor));
+    volumeDensity.set(block.volumeDensity);
+    volumeAnisotropy.set(block.volumeAnisotropy);
+    volumeEmittance.set(block.volumeEmittance);
+    volumeColor.setColor(ColorUtil.toFx(block.volumeColor));
+    absorption.set(block.absorption);
+    absorptionColor.setColor(ColorUtil.toFx(block.absorptionColor));
+    opaque.setSelected(block.opaque);
+    hidden.setSelected(block.hidden);
+
+    emittance.onValueChange(value -> scene.setEmittance(blockSpec, value.floatValue()));
+    emittanceColorListener = (observable, oldValue, newValue) -> scene.setEmittanceColor(blockSpec, ColorUtil.fromFx(newValue));
+    emittanceColor.colorProperty().addListener(emittanceColorListener);
+    emitterMappingOffset.onValueChange(value -> scene.setEmitterMappingOffset(blockSpec, value.floatValue()));
+    emitterMappingTypeListener = (observable, oldValue, newValue) -> scene.setEmitterMappingTypeOverride(blockSpec, newValue);
+    emitterMappingType.getSelectionModel().selectedItemProperty().addListener(emitterMappingTypeListener);
+    useReferenceColorsListener = (observable, oldValue, newValue) -> scene.setUseReferenceColors(blockSpec, newValue);
+    useReferenceColors.selectedProperty().addListener(useReferenceColorsListener);
+    alpha.onValueChange(value -> scene.setAlpha(blockSpec, value.floatValue()));
+    subsurfaceScattering.onValueChange(value -> scene.setSubsurfaceScattering(blockSpec, value.floatValue()));
+    diffuseColorListener = (observable, oldValue, newValue) -> scene.setDiffuseColor(blockSpec, ColorUtil.fromFx(newValue));
+    diffuseColor.colorProperty().addListener(diffuseColorListener);
+    specular.onValueChange(value -> scene.setSpecular(blockSpec, value.floatValue()));
+    ior.onValueChange(value -> scene.setIor(blockSpec, value.floatValue()));
+    perceptualSmoothness.onValueChange(
+        value -> scene.setPerceptualSmoothness(blockSpec, value.floatValue())
+    );
+    perceptualTransmissionSmoothness.onValueChange(
+        value -> scene.setPerceptualTransmissionSmoothness(blockSpec, value.floatValue())
+    );
+    metalness.onValueChange(value -> scene.setMetalness(blockSpec, value.floatValue()));
+    transmissionMetalness.onValueChange(value -> scene.setTransmissionMetalness(blockSpec, value.floatValue()));
+    specularColorListener = (observable, oldValue, newValue) -> scene.setSpecularColor(blockSpec, ColorUtil.fromFx(newValue));
+    specularColor.colorProperty().addListener(specularColorListener);
+    transmissionSpecularColorListener = (observable, oldValue, newValue) -> scene.setTransmissionSpecularColor(blockSpec, ColorUtil.fromFx(newValue));
+    transmissionSpecularColor.colorProperty().addListener(transmissionSpecularColorListener);
+    volumeDensity.onValueChange(value -> scene.setVolumeDensity(blockSpec, value.floatValue()));
+    volumeAnisotropy.onValueChange(value -> scene.setVolumeAnisotropy(blockSpec, value.floatValue()));
+    volumeEmittance.onValueChange(value -> scene.setVolumeEmittance(blockSpec, value.floatValue()));
+    volumeColorListener = (observable, oldValue, newValue) -> scene.setVolumeColor(blockSpec, ColorUtil.fromFx(newValue));
+    volumeColor.colorProperty().addListener(volumeColorListener);
+    absorption.onValueChange(value -> scene.setAbsorption(blockSpec, value.floatValue()));
+    absorptionColorListener = (observable, oldValue, newValue) -> scene.setAbsorptionColor(blockSpec, ColorUtil.fromFx(newValue));
+    absorptionColor.colorProperty().addListener(absorptionColorListener);
+    opaqueListener = (observable, oldValue, newValue) -> scene.setOpaque(blockSpec, newValue);
+    opaque.selectedProperty().addListener(opaqueListener);
+    hiddenListener = (observable, oldValue, newValue) -> scene.setHidden(blockSpec, newValue);
+    hidden.selectedProperty().addListener(hiddenListener);
+    addReferenceColor.setOnAction(e -> {
+      referenceColorPicker.colorProperty().removeListener(referenceColorPickerListener);
+      referenceColorRangeSlider.onValueChange(value -> {});
+      referenceColorTable.getItems().add(new MaterialReferenceColorData(new Vector4(1, 1, 1, 1)));
+      setEmitterMappingReferenceColors(blockSpec);
+      referenceColorTable.getSelectionModel().selectLast();
+    });
+    removeReferenceColor.setOnAction(e -> {
+      referenceColorPicker.colorProperty().removeListener(referenceColorPickerListener);
+      referenceColorRangeSlider.onValueChange(value -> {});
+      int index = referenceColorTable.getSelectionModel().getSelectedIndex();
+      referenceColorTable.getItems().remove(index);
+      setEmitterMappingReferenceColors(blockSpec);
+    });
+    referenceColorTable.getSelectionModel().selectedItemProperty().addListener(referenceColorTableListener);
+  }
+
+  private void setEmitterMappingReferenceColors(BlockSpec blockSpec) {
+    ArrayList<Vector4> referenceColors = new ArrayList<>(referenceColorTable.getItems().size());
+    referenceColorTable.getItems().forEach(data -> referenceColors.add(data.getReferenceColor()));
+    scene.setEmitterMappingReferenceColors(blockSpec, referenceColors);
+  }
+
   private void setEmitterMappingReferenceColors(String materialName) {
     ArrayList<Vector4> referenceColors = new ArrayList<>(referenceColorTable.getItems().size());
     referenceColorTable.getItems().forEach(data -> referenceColors.add(data.getReferenceColor()));
     scene.setEmitterMappingReferenceColors(materialName, referenceColors);
   }
 
+  private void updateMaterialList(Scene scene) {
+    if (listView != null) {
+      listView.getSelectionModel().clearSelection();
+    } else {
+      listView = new ListView<>();
+    }
+    if (extraMaterials != null) {
+      extraMaterials.getSelectionModel().clearSelection();
+    } else {
+      extraMaterials = new ListView<>();
+    }
+
+    ObservableList<BlockSpec> blockSpecs = FXCollections.observableArrayList();
+    if (scene != null) {
+      blockSpecs.addAll(scene.getPalette().blockSpecs());
+    }
+
+    FilteredList<BlockSpec> filteredList = new FilteredList<>(
+        new SortedList<>(blockSpecs, Comparator.naturalOrder())
+    );
+
+    listView.setCellFactory(list -> new BlockSpecCell());
+    listView.setItems(filteredList);
+    listView.getSelectionModel().selectedItemProperty().addListener(
+        (observable, oldValue, materialName) -> {
+          extraMaterials.getSelectionModel().clearSelection();
+          updateSelectedMaterial2(materialName);
+        }
+    );
+
+    ObservableList<String> extraMaterialsList = FXCollections.observableArrayList(ExtraMaterials.idMap.keySet());
+    FilteredList<String> filteredList1 = new FilteredList<>(
+        new SortedList<>(extraMaterialsList, Comparator.naturalOrder())
+    );
+
+    extraMaterials.setItems(filteredList1);
+    extraMaterials.getSelectionModel().selectedItemProperty().addListener(
+        (observable, oldValue, materialName) -> {
+          listView.getSelectionModel().clearSelection();
+          updateSelectedMaterial(materialName);
+        }
+    );
+
+    filterField.textProperty().addListener((observable, oldValue, newValue) -> {
+      if (newValue.trim().isEmpty()) {
+        filteredList.setPredicate(name -> true);
+        filteredList1.setPredicate(name -> true);
+      } else {
+        filteredList.setPredicate(name -> name.toString().contains(newValue));
+        filteredList1.setPredicate(name -> name.contains(newValue));
+      }
+    });
+  }
+
   @Override public void update(Scene scene) {
-    String material = listView.getSelectionModel().getSelectedItem();
-    updateSelectedMaterial(material);
+    updateMaterialList(scene);
   }
 
   @Override public String getTabTitle() {
@@ -566,5 +703,24 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
   }
 
   @Override public void initialize(URL location, ResourceBundle resources) {
+  }
+
+  private class BlockSpecCell extends ListCell<BlockSpec> {
+    @Override
+    protected void updateItem(BlockSpec blockSpec, boolean empty) {
+      super.updateItem(blockSpec, empty);
+
+      if (blockSpec != null) {
+        if (scene != null) {
+          String description = scene.getPalette().getBlockFromBlockSpec(blockSpec).description();
+          if (!description.isEmpty()) {
+            description = " (" + description + ")";
+          }
+          setText(blockSpec + description);
+        } else {
+          setText(blockSpec.toString());
+        }
+      }
+    }
   }
 }

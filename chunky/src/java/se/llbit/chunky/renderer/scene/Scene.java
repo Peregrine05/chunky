@@ -26,6 +26,7 @@ import java.util.stream.IntStream;
 import org.apache.commons.math3.util.FastMath;
 import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import se.llbit.chunky.PersistentSettings;
+import se.llbit.chunky.block.BlockSpec;
 import se.llbit.chunky.block.Void;
 import se.llbit.chunky.block.minecraft.Air;
 import se.llbit.chunky.block.Block;
@@ -273,6 +274,8 @@ public class Scene implements Configurable, Refreshable {
 
   /** Material properties for this scene. */
   public Map<String, JsonValue> materials = new HashMap<>();
+  public Map<BlockSpec, JsonValue> paletteMaterials = new HashMap<>();
+  private Map<Integer, JsonValue> tempMaterialMap = new HashMap<>();
 
   /** Lower Y clip plane. */
   public int yClipMin = 0;
@@ -446,6 +449,8 @@ public class Scene implements Configurable, Refreshable {
 
     // Copy material properties.
     materials = other.materials;
+    paletteMaterials = other.paletteMaterials;
+    tempMaterialMap = other.tempMaterialMap;
 
     exposure = other.exposure;
 
@@ -580,6 +585,15 @@ public class Scene implements Configurable, Refreshable {
       boolean emitterGridNeedChunkReload = false;
       Map<RegionPosition, List<ChunkPosition>> chunksToLoadByRegion = ChunkSelectionTracker.selectionByRegion(chunks);
       boolean octreeLoaded = loadOctree(context, taskTracker, chunksToLoadByRegion);
+      palette.blockSpecs().forEach(blockSpec -> {
+        int id = palette.indexOf(blockSpec);
+        JsonValue properties = tempMaterialMap.get(id);
+        if (properties != null) {
+          paletteMaterials.put(blockSpec, tempMaterialMap.get(id).copy());
+        }
+      });
+      tempMaterialMap.clear();
+      importPaletteMaterials();
       if (emitterSamplingStrategy != EmitterSamplingStrategy.NONE) {
         emitterGridNeedChunkReload = !loadEmitterGrid(context, taskTracker);
       }
@@ -887,7 +901,7 @@ public class Scene implements Configurable, Refreshable {
       int requiredDepth = calculateOctreeOrigin(chunksToLoadByRegion, false);
 
       // Create new octree to fit all chunks.
-      palette = new BlockPalette(materials);
+      palette = new BlockPalette(paletteMaterials);
       worldOctree = new Octree(octreeImplementation, requiredDepth);
 
       grassTexture = biomeStructureFactory.create();
@@ -1246,7 +1260,7 @@ public class Scene implements Configurable, Refreshable {
               // Metadata is the old block data (to be replaced in future Minecraft versions?).
               Vector3 position = new Vector3(x + wx0, y, z + wz0);
               if (block.isModifiedByBlockEntity()) {
-                Tag newTag = block.getNewTagWithBlockEntity(palette.getBlockSpec(chunkData.getBlockAt(x, y, z)).getTag(), entityTag);
+                Tag newTag = block.getNewTagWithBlockEntity(palette.getBlockSpec(chunkData.getBlockAt(x, y, z)).tag(), entityTag);
                 if (newTag != null) {
                   int id = palette.put(newTag);
                   block = palette.get(id);
@@ -2831,6 +2845,7 @@ public class Scene implements Configurable, Refreshable {
 
     // Save material settings.
     json.add("materials", mapToJson(materials));
+    json.add("paletteMaterials", savePalette());
 
     // TODO: add regionList to compress the scene description size.
     json.add("chunkList", chunkList);
@@ -2853,6 +2868,17 @@ public class Scene implements Configurable, Refreshable {
   private JsonObject mapToJson(Map<String, JsonValue> map) {
     JsonObject object = new JsonObject(map.size());
     map.forEach(object::add);
+    return object;
+  }
+
+  private JsonObject savePalette() {
+    JsonObject object = new JsonObject(paletteMaterials.size());
+    paletteMaterials.forEach((blockSpec, properties) -> {
+      int id = palette.indexOf(blockSpec);
+      if (id != -1) {
+        object.add(String.valueOf(id), properties);
+      }
+    });
     return object;
   }
 
@@ -2962,6 +2988,7 @@ public class Scene implements Configurable, Refreshable {
     entities.clear();
     fogVolumeStore.clear();
     materials.clear();
+    paletteMaterials.clear();
   }
 
   /** Create a backup of a scene file. */
@@ -3145,6 +3172,13 @@ public class Scene implements Configurable, Refreshable {
 
     hideUnknownBlocks = json.get("hideUnknownBlocks").boolValue(hideUnknownBlocks);
     materials = json.get("materials").object().copy().toMap();
+    tempMaterialMap.clear();
+    if (json.get("paletteMaterials").isObject()) {
+      JsonObject paletteMaterials = json.get("paletteMaterials").object();
+      for (JsonMember member : paletteMaterials) {
+        this.tempMaterialMap.put(Integer.parseInt(member.getName()), member.getValue());
+      }
+    }
     importMaterials();
 
     // Load world info.
@@ -3358,10 +3392,10 @@ public class Scene implements Configurable, Refreshable {
   }
 
   private void importPaletteMaterials() {
-    MaterialStore.blockIds.forEach((name) -> {
-      JsonValue properties = materials.get(name);
+    palette.blockSpecs().forEach(blockSpec -> {
+      JsonValue properties = paletteMaterials.get(blockSpec);
       if (properties != null) {
-        palette.updateProperties(name, block -> {
+        palette.updateProperties(blockSpec, block -> {
           block.loadMaterialProperties(properties.asObject());
         });
       }
@@ -3400,6 +3434,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setEmittance(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("emittance", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the emittance color property for the given material.
    */
@@ -3407,6 +3448,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("emittanceColor", ColorUtil.rgbToJson(value));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setEmittanceColor(BlockSpec blockSpec, Vector3 value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("emittanceColor", ColorUtil.rgbToJson(value));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3420,6 +3468,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setEmitterMappingOffset(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("emitterMappingOffset", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the useReferenceColors property for the given material.
    */
@@ -3430,6 +3485,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setUseReferenceColors(BlockSpec blockSpec, boolean value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("useReferenceColors", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the emittance property for the given material.
    */
@@ -3437,6 +3499,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("emitterMappingType", Json.of(value.getId()));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setEmitterMappingTypeOverride(BlockSpec blockSpec, EmitterMappingType value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("emitterMappingType", Json.of(value.getId()));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3456,6 +3525,22 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setEmitterMappingReferenceColors(BlockSpec blockSpec, List<Vector4> values) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    JsonArray referenceColors = new JsonArray(values.size());
+    values.forEach(value -> {
+      JsonObject referenceColorObject = new JsonObject();
+      referenceColorObject.add("red", value.x);
+      referenceColorObject.add("green", value.y);
+      referenceColorObject.add("blue", value.z);
+      referenceColorObject.add("range", value.w);
+      referenceColors.add(referenceColorObject);
+    });
+    material.set("emitterMappingReferenceColors", referenceColors);
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the alpha property for the given material.
    */
@@ -3463,6 +3548,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("alpha", Json.of(value));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setAlpha(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("alpha", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3476,6 +3568,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setSubsurfaceScattering(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("subsurfaceScattering", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the diffuse color property for the given material.
    */
@@ -3483,6 +3582,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("diffuseColor", ColorUtil.rgbToJson(value));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setDiffuseColor(BlockSpec blockSpec, Vector3 value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("diffuseColor", ColorUtil.rgbToJson(value));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3496,6 +3602,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setSpecular(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("specular", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the index of refraction property for the given material.
    */
@@ -3503,6 +3616,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("ior", Json.of(value));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setIor(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("ior", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3516,6 +3636,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setPerceptualSmoothness(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("roughness", Json.of(Math.pow(1 - value, 2)));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the transmission roughness property for the given material.
    */
@@ -3523,6 +3650,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("transmissionRoughness", Json.of(Math.pow(1 - value, 2)));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setPerceptualTransmissionSmoothness(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("transmissionRoughness", Json.of(Math.pow(1 - value, 2)));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3536,6 +3670,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setMetalness(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("metalness", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the transmission metalness property for the given material.
    */
@@ -3543,6 +3684,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("transmissionMetalness", Json.of(value));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setTransmissionMetalness(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("transmissionMetalness", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3556,6 +3704,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setSpecularColor(BlockSpec blockSpec, Vector3 value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("specularColor", ColorUtil.rgbToJson(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the transmission specular color property for the given material.
    */
@@ -3563,6 +3718,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("transmissionSpecularColor", ColorUtil.rgbToJson(value));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setTransmissionSpecularColor(BlockSpec blockSpec, Vector3 value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("transmissionSpecularColor", ColorUtil.rgbToJson(value));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3576,6 +3738,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setVolumeDensity(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("volumeDensity", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the volume anisotropy property for the given material.
    */
@@ -3583,6 +3752,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("volumeAnisotropy", Json.of(value));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setVolumeAnisotropy(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("volumeAnisotropy", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3596,6 +3772,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setVolumeEmittance(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("volumeEmittance", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the volume color property for the given material.
    */
@@ -3603,6 +3786,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("volumeColor", ColorUtil.rgbToJson(value));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setVolumeColor(BlockSpec blockSpec, Vector3 value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("volumeColor", ColorUtil.rgbToJson(value));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3616,6 +3806,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setAbsorption(BlockSpec blockSpec, float value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("absorption", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the absorption color property for the given material.
    */
@@ -3623,6 +3820,13 @@ public class Scene implements Configurable, Refreshable {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("absorptionColor", ColorUtil.rgbToJson(value));
     materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setAbsorptionColor(BlockSpec blockSpec, Vector3 value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("absorptionColor", ColorUtil.rgbToJson(value));
+    paletteMaterials.put(blockSpec, material);
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
@@ -3636,6 +3840,13 @@ public class Scene implements Configurable, Refreshable {
     refresh(ResetReason.MATERIALS_CHANGED);
   }
 
+  public void setOpaque(BlockSpec blockSpec, boolean value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("opaque", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
   /**
    * Modifies the hidden property for the given material.
    */
@@ -3644,6 +3855,26 @@ public class Scene implements Configurable, Refreshable {
     material.set("hidden", Json.of(value));
     materials.put(materialName, material);
     refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setHidden(BlockSpec blockSpec, boolean value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("hidden", Json.of(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void applyToAllOfType(BlockSpec blockSpec) {
+    String name = blockSpec.toBlock().name;
+    JsonValue object = paletteMaterials.get(blockSpec);
+    if (object != null) {
+      palette.blockSpecs().forEach(blockSpec1 -> {
+        if (palette.getBlockFromBlockSpec(blockSpec1).name.equals(name)) {
+          paletteMaterials.put(blockSpec1, object.copy());
+        }
+      });
+      refresh(ResetReason.MATERIALS_CHANGED);
+    }
   }
 
   public int getYClipMin() {

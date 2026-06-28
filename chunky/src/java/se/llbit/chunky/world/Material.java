@@ -279,8 +279,6 @@ public abstract class Material {
             referenceColorObject.get("blue").doubleValue(0),
             referenceColorObject.get("range").doubleValue(0)));
       }
-    } else {
-      emitterMappingReferenceColors = null;
     }
     roughness = json.get("roughness").floatValue(roughness);
     transmissionRoughness = json.get("transmissionRoughness").floatValue(transmissionRoughness);
