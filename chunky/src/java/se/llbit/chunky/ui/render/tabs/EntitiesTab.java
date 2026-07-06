@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -177,6 +178,33 @@ public class EntitiesTab extends RenderControlsTab implements Initializable {
 
   private final AddEntityDialog addEntityDialog = new AddEntityDialog();
 
+  private final ChangeListener<Number> posXListener = (observable, oldValue, newValue) -> {
+    withEntity(e -> {
+      Vector3 currentPosition = e.getPosition();
+      e.setPosition(new Vector3(newValue.doubleValue(), currentPosition.y, currentPosition.z));
+    });
+    scene.rebuildBvh();
+    scene.rebuildActorBvh();
+  };
+
+  private final ChangeListener<Number> posYListener = (observable, oldValue, newValue) -> {
+    withEntity(e -> {
+      Vector3 currentPosition = e.getPosition();
+      e.setPosition(new Vector3(currentPosition.x, newValue.doubleValue(), currentPosition.z));
+    });
+    scene.rebuildBvh();
+    scene.rebuildActorBvh();
+  };
+
+  private final ChangeListener<Number> posZListener = (observable, oldValue, newValue) -> {
+    withEntity(e -> {
+      Vector3 currentPosition = e.getPosition();
+      e.setPosition(new Vector3(currentPosition.x, currentPosition.y, newValue.doubleValue()));
+    });
+    scene.rebuildBvh();
+    scene.rebuildActorBvh();
+  };
+
   public EntitiesTab() throws IOException {
     FXMLLoader loader = new FXMLLoader(getClass().getResource("EntitiesTab.fxml"));
     loader.setRoot(this);
@@ -219,30 +247,6 @@ public class EntitiesTab extends RenderControlsTab implements Initializable {
     controls.getChildren().clear();
 
     updatePositionFields(entity);
-    posX.valueProperty().addListener((observable, oldValue, newValue) -> {
-      withEntity(e -> {
-        Vector3 currentPosition = e.getPosition();
-        e.setPosition(new Vector3(newValue.doubleValue(), currentPosition.y, currentPosition.z));
-      });
-      scene.rebuildBvh();
-      scene.rebuildActorBvh();
-    });
-    posY.valueProperty().addListener((observable, oldValue, newValue) -> {
-      withEntity(e -> {
-        Vector3 currentPosition = e.getPosition();
-        e.setPosition(new Vector3(currentPosition.x, newValue.doubleValue(), currentPosition.z));
-      });
-      scene.rebuildBvh();
-      scene.rebuildActorBvh();
-    });
-    posZ.valueProperty().addListener((observable, oldValue, newValue) -> {
-      withEntity(e -> {
-        Vector3 currentPosition = e.getPosition();
-        e.setPosition(new Vector3(currentPosition.x, currentPosition.y, newValue.doubleValue()));
-      });
-      scene.rebuildBvh();
-      scene.rebuildActorBvh();
-    });
 
     controls.getChildren().add(position);
     position.setVisible(true);
@@ -533,6 +537,10 @@ public class EntitiesTab extends RenderControlsTab implements Initializable {
         });
     nameCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().name));
     kindCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getKind()));
+
+    posX.valueProperty().addListener(posXListener);
+    posY.valueProperty().addListener(posYListener);
+    posZ.valueProperty().addListener(posZListener);
   }
 
   private void withEntity(Consumer<Entity> consumer) {
@@ -564,8 +572,14 @@ public class EntitiesTab extends RenderControlsTab implements Initializable {
   }
 
   private void updatePositionFields(Entity entity) {
+    posX.valueProperty().removeListener(posXListener);
+    posY.valueProperty().removeListener(posYListener);
+    posZ.valueProperty().removeListener(posZListener);
     posX.valueProperty().set(entity.position.x);
     posY.valueProperty().set(entity.position.y);
     posZ.valueProperty().set(entity.position.z);
+    posX.valueProperty().addListener(posXListener);
+    posY.valueProperty().addListener(posYListener);
+    posZ.valueProperty().addListener(posZListener);
   }
 }
