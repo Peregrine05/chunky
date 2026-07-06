@@ -681,10 +681,10 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
 
     filterField.textProperty().addListener((observable, oldValue, newValue) -> {
       if (newValue.trim().isEmpty()) {
-        filteredList.setPredicate(name -> true);
+        filteredList.setPredicate(blockSpec -> true);
         filteredList1.setPredicate(name -> true);
       } else {
-        filteredList.setPredicate(name -> name.toString().contains(newValue));
+        filteredList.setPredicate(blockSpec -> blockSpec.toString().contains(newValue));
         filteredList1.setPredicate(name -> name.contains(newValue));
       }
     });
