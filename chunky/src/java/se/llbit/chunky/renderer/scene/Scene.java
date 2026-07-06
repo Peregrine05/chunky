@@ -887,7 +887,7 @@ public class Scene implements Configurable, Refreshable {
 
     Dimension dimension = world.currentDimension();
 
-    try (TaskTracker.Task task = taskTracker.task("(1/6) Loading regions")) {
+    try (TaskTracker.Task task = taskTracker.task("(1/7) Loading regions")) {
       task.update(2, 1);
 
       loadedWorld = world;
@@ -917,7 +917,7 @@ public class Scene implements Configurable, Refreshable {
       }
     }
 
-    try (TaskTracker.Task task = taskTracker.task("(2/6) Loading entities")) {
+    try (TaskTracker.Task task = taskTracker.task("(2/7) Loading entities")) {
      entities.loadPlayers(task, dimension);
     }
 
@@ -933,7 +933,7 @@ public class Scene implements Configurable, Refreshable {
     Set<RegionPosition> loadedRegions = new HashSet<>();
     Set<ChunkPosition> loadedChunks = new HashSet<>();
 
-    try (TaskTracker.Task task = taskTracker.task("(3/6) Loading chunks")) {
+    try (TaskTracker.Task task = taskTracker.task("(3/7) Loading chunks")) {
       int done = 1;
       int target = 0;
       for (List<ChunkPosition> value : chunksToLoadByRegion.values()) {
@@ -1307,7 +1307,7 @@ public class Scene implements Configurable, Refreshable {
     entities.finalizeLoading();
     palette.unsynchronize();
 
-    try (TaskTracker.Task task = taskTracker.task("(4/6) Finalizing octree")) {
+    try (TaskTracker.Task task = taskTracker.task("(4/7) Finalizing octree")) {
 
       worldOctree.startFinalization();
 
@@ -1503,11 +1503,14 @@ public class Scene implements Configurable, Refreshable {
 
     chunks = loadedChunks;
     camera.setWorldSize(1 << worldOctree.getDepth());
-    try (TaskTracker.Task task = taskTracker.task("(5/6) Building world BVH")) {
+    try (TaskTracker.Task task = taskTracker.task("(5/7) Building world BVH")) {
       buildBvh(task);
     }
-    try (TaskTracker.Task task = taskTracker.task("(6/6) Building actor BVH")) {
+    try (TaskTracker.Task task = taskTracker.task("(6/7) Building actor BVH")) {
       buildActorBvh(task);
+    }
+    try (TaskTracker.Task task = taskTracker.task("(7/7) Building fog BVH")) {
+      buildFogVolumeBVH(task);
     }
     Log.info(String.format("Loaded %d chunks", numChunks));
 
@@ -2412,7 +2415,7 @@ public class Scene implements Configurable, Refreshable {
       try {
         long fileTimestamp = ioContext.fileTimestamp(fileName);
         OctreeFileFormat.OctreeData data;
-        Consumer<String> stepConsumer = step -> task.update("(1/3) Loading octree (" + step + ")");
+        Consumer<String> stepConsumer = step -> task.update("(1/4) Loading octree (" + step + ")");
 
         try (DataInputStream in = new DataInputStream(new FastBufferedInputStream(new GZIPInputStream(new PositionalInputStream(ioContext.getSceneFileInputStream(fileName), pos -> {
           task.updateInterval((int) (pos * progressScale), 1);
@@ -2443,11 +2446,14 @@ public class Scene implements Configurable, Refreshable {
         calculateOctreeOrigin(chunksToLoadByRegion, data.version < 6);
         camera.setWorldSize(1 << worldOctree.getDepth());
 
-        try (TaskTracker.Task bvhTask = taskTracker.task("(2/3) Building world BVH")) {
+        try (TaskTracker.Task bvhTask = taskTracker.task("(2/4) Building world BVH")) {
           buildBvh(bvhTask);
         }
-        try (TaskTracker.Task bvhTask = taskTracker.task("(3/3) Building actor BVH")) {
+        try (TaskTracker.Task bvhTask = taskTracker.task("(3/4) Building actor BVH")) {
           buildActorBvh(bvhTask);
+        }
+        try (TaskTracker.Task bvhTask = taskTracker.task("(4/4) Building fog BVH")) {
+          buildFogVolumeBVH(bvhTask);
         }
 
         return true;
@@ -2975,8 +2981,12 @@ public class Scene implements Configurable, Refreshable {
   }
 
   public void buildFogVolumeBVH() {
+    buildFogVolumeBVH(TaskTracker.Task.NONE);
+  }
+
+  public void buildFogVolumeBVH(TaskTracker.Task task) {
     fogVolumeStore.finalizeLoading();
-    fogVolumeStore.buildBvh(TaskTracker.Task.NONE, origin);
+    fogVolumeStore.buildBvh(task, origin);
     refresh();
   }
 
