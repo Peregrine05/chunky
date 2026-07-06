@@ -1,10 +1,12 @@
 package se.llbit.chunky.entity;
 
+import javafx.scene.control.Button;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.VBox;
 import se.llbit.chunky.renderer.scene.Scene;
 import se.llbit.chunky.resources.SolidColorTexture;
 import se.llbit.chunky.ui.DoubleAdjuster;
+import se.llbit.chunky.ui.dialogs.EditMaterialDialog;
 import se.llbit.chunky.ui.render.RenderControlsTab;
 import se.llbit.chunky.world.Material;
 import se.llbit.chunky.world.material.TextureMaterial;
@@ -94,11 +96,15 @@ public class SphereEntity extends Entity {
     });
     controls.getChildren().add(radiusAdjuster);
 
-    TitledPane materialPropertiesPane = new TitledPane();
-    materialPropertiesPane.setText("Material Properties");
-    materialPropertiesPane.setContent(Material.getControls(this.material, scene));
+    Button editMaterialButton = new Button();
+    editMaterialButton.setText("Edit material");
 
-    controls.getChildren().add(materialPropertiesPane);
+    editMaterialButton.setOnAction(e -> {
+      EditMaterialDialog dialog = new EditMaterialDialog(material, scene);
+      dialog.showAndWait();
+    });
+
+    controls.getChildren().add(editMaterialButton);
 
     return controls;
   }
