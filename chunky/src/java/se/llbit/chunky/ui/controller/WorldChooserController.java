@@ -33,6 +33,7 @@ import se.llbit.chunky.resources.MinecraftFinder;
 import se.llbit.chunky.resources.ResourcePackLoader;
 import se.llbit.chunky.ui.TableSortConfigSerializer;
 import se.llbit.chunky.world.Dimension;
+import se.llbit.chunky.world.EmptyWorld;
 import se.llbit.chunky.world.World;
 import se.llbit.fxutil.Dialogs;
 import se.llbit.json.JsonArray;
@@ -195,7 +196,10 @@ public class WorldChooserController implements Initializable {
           if (worldDirs != null) {
             for (File dir : worldDirs) {
               if (World.isWorldDir(dir)) {
-                worlds.add(World.loadWorld(dir, Dimension.Identifier.OVERWORLD, World.LoggedWarnings.SILENT));
+                World world = World.loadWorld(dir, Dimension.Identifier.OVERWORLD, World.LoggedWarnings.SILENT);
+                if (world != EmptyWorld.INSTANCE) {
+                  worlds.add(world);
+                }
               }
             }
           }
