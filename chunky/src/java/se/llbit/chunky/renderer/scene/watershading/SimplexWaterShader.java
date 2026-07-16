@@ -78,15 +78,15 @@ public class SimplexWaterShader implements WaterShader {
   }
 
   @Override
-  public WaterShader clone() {
-    SimplexWaterShader shader = new SimplexWaterShader();
-    shader.iterations = iterations;
-    shader.baseFrequency = baseFrequency;
-    shader.baseAmplitude = baseAmplitude;
-    shader.animationSpeed = animationSpeed;
-    shader.offset.set(offset);
-    shader.scale.set(scale);
-    return shader;
+  public void set(WaterShader other) {
+    if (other instanceof SimplexWaterShader shader) {
+      iterations = shader.iterations;
+      baseFrequency = shader.baseFrequency;
+      baseAmplitude = shader.baseAmplitude;
+      animationSpeed = shader.animationSpeed;
+      offset.set(shader.offset);
+      scale.set(shader.scale);
+    }
   }
 
   @Override

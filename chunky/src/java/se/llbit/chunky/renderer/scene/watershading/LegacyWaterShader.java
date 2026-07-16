@@ -74,8 +74,11 @@ public class LegacyWaterShader implements WaterShader {
   }
 
   @Override
-  public WaterShader clone() {
-    return new LegacyWaterShader();
+  public void set(WaterShader other) {
+    if (other instanceof LegacyWaterShader shader) {
+      offset.set(shader.offset);
+      scale.set(shader.scale);
+    }
   }
 
   @Override

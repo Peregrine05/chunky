@@ -25,5 +25,5 @@ import se.llbit.util.HasControls;
 public interface WaterShader extends Configurable, HasControls {
   Vector3 doWaterShading(Ray ray, IntersectionRecord intersectionRecord, double animationTime);
 
-  WaterShader clone();
+  void set(WaterShader other);
 }

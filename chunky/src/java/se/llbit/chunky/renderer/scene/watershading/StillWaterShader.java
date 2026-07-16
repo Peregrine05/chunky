@@ -28,8 +28,7 @@ public class StillWaterShader implements WaterShader {
   }
 
   @Override
-  public WaterShader clone() {
-    return new StillWaterShader();
+  public void set(WaterShader other) {
   }
 
   @Override

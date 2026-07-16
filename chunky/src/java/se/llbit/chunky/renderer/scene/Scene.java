@@ -455,7 +455,8 @@ public class Scene implements Configurable, Refreshable {
     exposure = other.exposure;
 
     waterShadingStrategy = other.waterShadingStrategy;
-    currentWaterShader = other.currentWaterShader.clone();
+    setCurrentWaterShader(waterShadingStrategy);
+    currentWaterShader.set(other.currentWaterShader);
     fog.set(other.fog);
     fogVolumeStore.copyState(other.fogVolumeStore);
     cloudLayers.clear();
