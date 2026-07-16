@@ -496,7 +496,7 @@ public class Octree implements Intersectable {
 
     // Check if we are in-bounds
     if (!isInside(ray.o)) {
-      if (ray.getCurrentMedium() != Void.INSTANCE && ray.getCurrentMedium() != Air.INSTANCE) {
+      if (ray.getCurrentMedium() != Void.INSTANCE && ray.getCurrentMedium() != Air.INSTANCE && ray.getCurrentMedium() != WaterPlaneMaterial.INSTANCE) {
         return false;
       }
       double dist = enterOctree(ray, intersectionRecord);
@@ -530,6 +530,12 @@ public class Octree implements Intersectable {
         intersectionRecord.material = currentBlock;
         currentBlock.getColor(intersectionRecord);
         intersectionRecord.distance = distance;
+        if (currentBlock == WaterPlaneMaterial.INSTANCE) {
+          Ray testRay2 = new Ray(ray);
+          testRay2.o.scaleAdd(intersectionRecord.distance, testRay.d);
+          Vector3 shadeNormal = scene.getCurrentWaterShader().doWaterShading(testRay, intersectionRecord, scene.getAnimationTime());
+          intersectionRecord.shadeN.set(shadeNormal);
+        }
         return true;
       }
 
