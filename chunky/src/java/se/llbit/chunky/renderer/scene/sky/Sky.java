@@ -270,7 +270,7 @@ public class Sky implements JsonSerializable {
             theta = (theta % 1 + 1) % 1;
           }
           double phi = Math.abs(Math.asin(y)) / Constants.HALF_PI;
-          skymap.getColor(theta, phi, intersectionRecord.color);
+          getSkymapColor(skymap, theta, phi, intersectionRecord.color);
         } else {
           double theta = FastMath.atan2(z, x) / Constants.TAU;
           theta = (theta % 1 + 1) % 1;
