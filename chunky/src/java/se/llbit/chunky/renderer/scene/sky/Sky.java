@@ -729,5 +729,6 @@ public class Sky implements JsonSerializable {
 
   public void setTextureInterpolation(boolean textureInterpolation) {
     this.textureInterpolation = textureInterpolation;
+    scene.refresh();
   }
 }
