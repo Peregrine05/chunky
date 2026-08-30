@@ -22,6 +22,8 @@ import se.llbit.chunky.entity.Entity;
 import se.llbit.chunky.resources.Texture;
 import se.llbit.math.Vector3;
 
+import java.util.Collection;
+
 public class Lectern extends EmptyModelBlock {
     private final String facing;
     private final boolean hasBook;
@@ -34,12 +36,12 @@ public class Lectern extends EmptyModelBlock {
     }
 
     @Override
-    public boolean isEntity() {
+    public boolean hasEntities() {
         return true;
     }
 
     @Override
-    public Entity toEntity(Vector3 position) {
-        return new se.llbit.chunky.entity.Lectern(position, this.facing, this.hasBook);
+    public Collection<Entity> createEntities(Vector3 position) {
+      return se.llbit.chunky.entity.Lectern.create(position, this.facing, this.hasBook);
     }
 }

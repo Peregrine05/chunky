@@ -28,9 +28,10 @@ import se.llbit.math.Vector3;
 import se.llbit.nbt.CompoundTag;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 
 public class WallHead extends EmptyModelBlock {
-
   private final String description;
   private final int facing;
   private final SkullEntity.Kind type;
@@ -63,13 +64,13 @@ public class WallHead extends EmptyModelBlock {
   }
 
   @Override
-  public boolean isEntity() {
+  public boolean hasEntities() {
     return type != Kind.PLAYER;
   }
 
   @Override
-  public Entity toEntity(Vector3 position) {
-    return new SkullEntity(position, type, 0, facing);
+  public Collection<Entity> createEntities(Vector3 position) {
+    return Collections.singleton(new SkullEntity(position, type, 0, facing));
   }
 
   @Override
@@ -78,7 +79,7 @@ public class WallHead extends EmptyModelBlock {
   }
 
   @Override
-  public Entity toBlockEntity(Vector3 position, CompoundTag entityTag) {
+  public Entity createBlockEntity(Vector3 position, CompoundTag entityTag) {
     if (type == Kind.PLAYER) {
       try {
         String textureUrl = Head.getTextureUrl(entityTag);

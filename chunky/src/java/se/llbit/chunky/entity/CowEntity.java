@@ -16,6 +16,7 @@ import se.llbit.util.JsonUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 public class CowEntity extends Entity implements Poseable, Variant {
 
@@ -272,7 +273,7 @@ public class CowEntity extends Entity implements Poseable, Variant {
     return json;
   }
 
-  public static CowEntity fromJson(JsonObject json) {
+  public static Entity fromJson(JsonObject json) {
     return new CowEntity(json);
   }
 

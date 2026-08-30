@@ -22,6 +22,9 @@ import se.llbit.chunky.entity.Entity;
 import se.llbit.chunky.resources.Texture;
 import se.llbit.math.Vector3;
 
+import java.util.Collection;
+import java.util.Collections;
+
 public class SporeBlossom extends EmptyModelBlock {
 
   public SporeBlossom() {
@@ -30,12 +33,12 @@ public class SporeBlossom extends EmptyModelBlock {
   }
 
   @Override
-  public boolean isEntity() {
+  public boolean hasEntities() {
     return true;
   }
 
   @Override
-  public Entity toEntity(Vector3 position) {
-    return new se.llbit.chunky.entity.SporeBlossom(position);
+  public Collection<Entity> createEntities(Vector3 position) {
+    return Collections.singleton(new se.llbit.chunky.entity.SporeBlossom(position));
   }
 }

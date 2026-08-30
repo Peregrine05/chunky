@@ -1,6 +1,7 @@
 package se.llbit.chunky.entity;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 
 import javafx.scene.layout.VBox;
@@ -298,7 +299,7 @@ public class Book extends Entity implements Poseable {
     return json;
   }
 
-  public static Book fromJson(JsonObject json) {
+  public static Entity fromJson(JsonObject json) {
     return new Book(json);
   }
 

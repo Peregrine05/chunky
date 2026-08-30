@@ -23,6 +23,9 @@ import se.llbit.chunky.entity.Entity;
 import se.llbit.chunky.resources.Texture;
 import se.llbit.math.Vector3;
 
+import java.util.Collection;
+import java.util.Collections;
+
 public class CoralFan extends EmptyModelBlock {
 
   private final String coralType;
@@ -59,11 +62,11 @@ public class CoralFan extends EmptyModelBlock {
     }
   }
 
-  @Override public boolean isEntity() {
+  @Override public boolean hasEntities() {
     return true;
   }
 
-  @Override public Entity toEntity(Vector3 position) {
-    return new CoralFanEntity(position, coralType);
+  @Override public Collection<Entity> createEntities(Vector3 position) {
+    return Collections.singleton(new CoralFanEntity(position, coralType));
   }
 }

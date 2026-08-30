@@ -31,6 +31,8 @@ import se.llbit.util.mojangapi.MinecraftSkin;
 import se.llbit.util.mojangapi.MojangApi;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 
 public class Head extends EmptyModelBlock {
@@ -53,13 +55,13 @@ public class Head extends EmptyModelBlock {
   }
 
   @Override
-  public boolean isEntity() {
+  public boolean hasEntities() {
     return type != Kind.PLAYER;
   }
 
   @Override
-  public Entity toEntity(Vector3 position) {
-    return new SkullEntity(position, type, rotation, 1);
+  public Collection<Entity> createEntities(Vector3 position) {
+    return Collections.singleton(new SkullEntity(position, type, rotation, 1));
   }
 
   @Override
@@ -68,7 +70,7 @@ public class Head extends EmptyModelBlock {
   }
 
   @Override
-  public Entity toBlockEntity(Vector3 position, CompoundTag entityTag) {
+  public Entity createBlockEntity(Vector3 position, CompoundTag entityTag) {
     if (type == Kind.PLAYER) {
       try {
         String textureUrl = getTextureUrl(entityTag);

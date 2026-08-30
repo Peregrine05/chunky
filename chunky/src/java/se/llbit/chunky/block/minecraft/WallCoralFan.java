@@ -22,6 +22,9 @@ import se.llbit.chunky.entity.Entity;
 import se.llbit.chunky.entity.WallCoralFanEntity;
 import se.llbit.math.Vector3;
 
+import java.util.Collection;
+import java.util.Collections;
+
 public class WallCoralFan extends EmptyModelBlock {
 
   private final String coralType;
@@ -34,11 +37,11 @@ public class WallCoralFan extends EmptyModelBlock {
     invisible = true;
   }
 
-  @Override public boolean isEntity() {
+  @Override public boolean hasEntities() {
     return true;
   }
 
-  @Override public Entity toEntity(Vector3 position) {
-    return new WallCoralFanEntity(position, coralType, facing);
+  @Override public Collection<Entity> createEntities(Vector3 position) {
+    return Collections.singleton(new WallCoralFanEntity(position, coralType, facing));
   }
 }

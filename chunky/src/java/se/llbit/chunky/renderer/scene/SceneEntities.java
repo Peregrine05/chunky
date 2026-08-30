@@ -315,8 +315,8 @@ public class SceneEntities implements Intersectable {
       // rather than the actors array. In future versions only the actors
       // array should contain poseable entities.
       for (JsonValue element : json.get("entities").array()) {
-        Entity entity = Entity.loadFromJson(element.object());
-        if (entity != null) {
+        Collection<Entity> jsonEntities = Entity.entitiesFromJson(element.object());
+        for (Entity entity : jsonEntities) {
           if (entity instanceof PlayerEntity) {
             actors.add(entity);
           } else {
@@ -325,8 +325,8 @@ public class SceneEntities implements Intersectable {
         }
       }
       for (JsonValue element : json.get("actors").array()) {
-        Entity entity = Entity.loadFromJson(element.object());
-        actors.add(entity);
+        Collection<Entity> entity = Entity.entitiesFromJson(element.object());
+        actors.addAll(entity);
       }
     }
 

@@ -39,8 +39,8 @@ public class Beacon extends AbstractModelBlock {
   }
 
   @Override
-  public boolean isBlockWithEntity() {
-    return true;
+  public boolean isReplacedByEntities() {
+    return false;
   }
 
   @Override
@@ -49,7 +49,7 @@ public class Beacon extends AbstractModelBlock {
   }
 
   @Override
-  public Entity toBlockEntity(Vector3 position, CompoundTag entityTag) {
+  public Entity createBlockEntity(Vector3 position, CompoundTag entityTag) {
     if (entityTag.get("Levels").intValue(0) > 0) {
       return new BeaconBeam(position);
     }

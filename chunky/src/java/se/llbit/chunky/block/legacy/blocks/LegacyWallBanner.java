@@ -29,7 +29,7 @@ public class LegacyWallBanner extends EmptyModelBlock {
   }
 
   @Override
-  public Entity toBlockEntity(Vector3 position, CompoundTag entityTag) {
+  public Entity createBlockEntity(Vector3 position, CompoundTag entityTag) {
     return new WallBanner(position, facing, LegacyBanner.parseDesign(entityTag));
   }
 }

@@ -61,7 +61,7 @@ public class EntitiesTab extends RenderControlsTab implements Initializable {
       return player;
     });
     entityTypes.put("Armor stand", (position, scene) -> new ArmorStand(position, new CompoundTag()));
-    entityTypes.put("Lectern", (position, scene) -> new Lectern(position, "north", true));
+    entityTypes.put("Lectern", (position, scene) -> new Lectern(position, "north"));
     entityTypes.put("Book", (position, scene) -> new Book(position, Math.PI - Math.PI / 16, Math.toRadians(30), Math.toRadians(180 - 30)));
     entityTypes.put("Beacon beam", (position, scene) -> new BeaconBeam(position));
     entityTypes.put("Sphere", (position, scene) -> new SphereEntity(position, 0.5));
