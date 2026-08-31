@@ -77,9 +77,9 @@ public class DefaultRenderManager extends Thread implements RenderManager {
 
   static {
     addRenderer(new PathTracingRenderer(ChunkyPathTracerID, "Chunky Path Tracer",
-        "A photorealistic Path Tracing renderer.", new PathTracer()));
+      "A photorealistic Path Tracing renderer.", new PathTracer()));
     addPreviewRenderer(new PreviewRenderer(ChunkyPreviewID, "Chunky Preview",
-        "A simple ray marching preview renderer.", new PreviewRayTracer()));
+      "A simple ray marching preview renderer.", new PreviewRayTracer()));
   }
 
   /**
@@ -91,11 +91,11 @@ public class DefaultRenderManager extends Thread implements RenderManager {
   /**
    * This is a buffered scene which render workers should use while rendering.
    * The buffered scene is only updated when the workers are quiescent.
-   *
+   * <p>
    * Render workers should:
-   *  * Increment {@code bufferedScene.spp} after rendering each frame
-   *  * Merge the new frame with {@code bufferedScene.getSampleBuffer()}
-   *
+   * * Increment {@code bufferedScene.spp} after rendering each frame
+   * * Merge the new frame with {@code bufferedScene.getSampleBuffer()}
+   * <p>
    * Render workers should not otherwise modify this.
    */
   public final Scene bufferedScene;
@@ -107,7 +107,7 @@ public class DefaultRenderManager extends Thread implements RenderManager {
 
   /**
    * This is the render worker pool {@code Renderer}s should use.
-   *
+   * <p>
    * {@code Renderer}s should submit small work-units to this pool. CPU usage is limited automatically, but if
    * each work-unit can take a long time, they should call {@code RenderWorkerPool.RenderWorker.workSleep()}
    * periodically to manage CPU usage.
@@ -119,7 +119,8 @@ public class DefaultRenderManager extends Thread implements RenderManager {
   /**
    * The render canvas. This is redrawn on every frame (if applicable).
    */
-  protected Repaintable canvas = () -> {};
+  protected Repaintable canvas = () -> {
+  };
 
   /**
    * Decides if the canvas is in view and every frame needs to be finalized. If not, only
@@ -137,8 +138,10 @@ public class DefaultRenderManager extends Thread implements RenderManager {
    */
   private final Collection<SceneStatusListener> sceneStatusListeners = new ArrayList<>();
 
-  private BiConsumer<Long, Integer> renderCompletionListener = (time, sps) -> {};
-  private BiConsumer<Scene, Integer> frameCompletionListener = (scene, spp) -> {};
+  private BiConsumer<Long, Integer> renderCompletionListener = (time, sps) -> {
+  };
+  private BiConsumer<Scene, Integer> frameCompletionListener = (scene, spp) -> {
+  };
 
   protected TaskTracker.Task renderTask = TaskTracker.Task.NONE;
 
@@ -166,11 +169,28 @@ public class DefaultRenderManager extends Thread implements RenderManager {
    * This renderer does nothing. Is used when there is an invalid renderer.
    */
   protected static final Renderer EMPTY_RENDERER = new Renderer() {
-    @Override public String getId() { return "Empty"; }
-    @Override public String getName() { return "Empty"; }
-    @Override public String getDescription() { return "Empty Renderer"; }
-    @Override public void setPostRender(BooleanSupplier callback) {}
-    @Override public void render(DefaultRenderManager manager) {}
+    @Override
+    public String getId() {
+      return "Empty";
+    }
+
+    @Override
+    public String getName() {
+      return "Empty";
+    }
+
+    @Override
+    public String getDescription() {
+      return "Empty Renderer";
+    }
+
+    @Override
+    public void setPostRender(BooleanSupplier callback) {
+    }
+
+    @Override
+    public void render(DefaultRenderManager manager) {
+    }
   };
 
   protected final BooleanSupplier previewCallback;
@@ -178,7 +198,7 @@ public class DefaultRenderManager extends Thread implements RenderManager {
 
   /**
    * @param headless {@code true} if rendering threads should be shut
-   * down after reaching the render target.
+   *                 down after reaching the render target.
    */
   public DefaultRenderManager(RenderContext context, boolean headless) {
     super("Internal Render Manager");
@@ -197,7 +217,7 @@ public class DefaultRenderManager extends Thread implements RenderManager {
       sendSceneStatus(bufferedScene.sceneStatus());
 
       renderStatusListeners.forEach(listener -> {
-        listener.setRenderTime(System.currentTimeMillis() - frameStart);
+        listener.setRenderTime((System.nanoTime() - frameStart) / 1_000_000);
         listener.setSamplesPerSecond(0);
         listener.setSpp(0);
       });
@@ -205,12 +225,12 @@ public class DefaultRenderManager extends Thread implements RenderManager {
       if (getPreviewRenderer().autoPostProcess())
         this.finalizeFrame(true);
 
-      frameStart = System.currentTimeMillis();
+      frameStart = System.nanoTime();
       return !finalizeAllFrames || sceneProvider.pollSceneStateChange();
     };
 
     this.renderCallback = () -> {
-      long elapsedTime = System.currentTimeMillis() - frameStart;
+      long elapsedTime = System.nanoTime() - frameStart;
 
       sceneProvider.withSceneProtected(scene -> {
         synchronized (bufferedScene) {
@@ -220,7 +240,8 @@ public class DefaultRenderManager extends Thread implements RenderManager {
       });
 
       synchronized (bufferedScene) {
-        bufferedScene.renderTime += elapsedTime;
+        bufferedScene.renderTime += elapsedTime / 1_000_000;
+        bufferedScene.lastPassTime = elapsedTime;
 
         this.finalizeFrame(getRenderer().autoPostProcess() && finalizeAllFrames);
 
@@ -233,7 +254,7 @@ public class DefaultRenderManager extends Thread implements RenderManager {
         }
       }
 
-      frameStart = System.currentTimeMillis();
+      frameStart = System.nanoTime();
       return mode == RenderMode.PAUSED || sceneProvider.pollSceneStateChange();
     };
   }
@@ -298,7 +319,7 @@ public class DefaultRenderManager extends Thread implements RenderManager {
         // Select the correct renderer
         Renderer render = mode == RenderMode.PREVIEW ? getPreviewRenderer() : getRenderer();
 
-        frameStart = System.currentTimeMillis();
+        frameStart = System.nanoTime();
         if (mode == RenderMode.PREVIEW) {
           // Bail early if the preview is not visible
           if (finalizeAllFrames) {
@@ -381,9 +402,8 @@ public class DefaultRenderManager extends Thread implements RenderManager {
    * @return the current rendering speed in samples per second (SPS)
    */
   private int samplesPerSecond() {
-    long pixelsPerFrame = bufferedScene.canvasConfig.getPixelCount();
-    double renderTime = bufferedScene.renderTime / 1000.0;
-    return (int) ((bufferedScene.spp * pixelsPerFrame) / renderTime);
+    int samplesPerPass = context.sppPerPass() * bufferedScene.getCurrentBranchCount() * bufferedScene.canvasConfig.getPixelCount();
+    return (int) (samplesPerPass * 1_000_000_000.0 / bufferedScene.lastPassTime);
   }
 
   private void updateRenderProgress() {
@@ -614,7 +634,7 @@ public class DefaultRenderManager extends Thread implements RenderManager {
   public RenderStatus getRenderStatus() {
     RenderStatus status;
     synchronized (bufferedScene) {
-      status = new RenderStatus(bufferedScene.renderTime, bufferedScene.spp);
+      status = new RenderStatus(bufferedScene.renderTime, bufferedScene.lastPassTime, bufferedScene.spp);
     }
     return status;
   }

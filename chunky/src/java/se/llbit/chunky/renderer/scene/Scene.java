@@ -190,7 +190,14 @@ public class Scene implements Configurable {
 
   public ArrayList<PostProcessingFilter> postprocessingFilters = new ArrayList<>();
   private PictureExportFormat pictureExportFormat = PictureExportFormats.PNG;
+  /**
+   * Total render time in milliseconds
+   */
   public long renderTime;
+  /**
+   * Last render pass time in nanoseconds
+   */
+  public long lastPassTime;
   /**
    * Current SPP for the scene.
    */
@@ -486,6 +493,7 @@ public class Scene implements Configurable {
 
     spp = other.spp;
     renderTime = other.renderTime;
+    lastPassTime = other.lastPassTime;
 
     resetReason = other.resetReason;
 
@@ -2492,6 +2500,7 @@ public class Scene implements Configurable {
         // we don't have the old render state, so reset spp and render time
         spp = 0;
         renderTime = 0;
+        lastPassTime = 0;
         return false;
       }
     }
@@ -3262,6 +3271,7 @@ public class Scene implements Configurable {
     // other settings which can reset the render status.
     spp = json.get("spp").intValue(spp);
     renderTime = json.get("renderTime").longValue(renderTime);
+    lastPassTime = 0;
 
     if (json.get("chunkList").isArray()) {
       JsonArray chunkList = json.get("chunkList").array();
@@ -3314,6 +3324,7 @@ public class Scene implements Configurable {
     if (reason.shouldRerender()) {
       spp = 0;
       renderTime = 0;
+      lastPassTime = 0;
     }
     setResetReason(reason);
     notifyAll();
