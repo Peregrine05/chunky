@@ -30,10 +30,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.util.Callback;
 import org.controlsfx.control.ToggleSwitch;
 import se.llbit.chunky.block.*;
-import se.llbit.chunky.block.minecraft.UnknownBlock;
 import se.llbit.chunky.renderer.scene.EmitterMappingType;
 import se.llbit.chunky.renderer.scene.Scene;
 import se.llbit.chunky.ui.DoubleAdjuster;
@@ -47,7 +45,6 @@ import se.llbit.fx.LuxColorPicker;
 import se.llbit.math.ColorUtil;
 import se.llbit.math.Vector3;
 import se.llbit.math.Vector4;
-import se.llbit.nbt.CompoundTag;
 
 import java.net.URL;
 import java.util.Collection;
@@ -99,8 +96,8 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
   private ChangeListener<? super MaterialReferenceColorData> referenceColorTableListener = (observable, oldValue, newValue) -> {};
   private ChangeListener<Color> referenceColorPickerListener = (observable, oldValue, newValue) -> {};
 
-  private ListView<BlockSpec> listView;
-  private ListView<String> extraMaterials;
+  private ListView<BlockSpec> blockSpecListView;
+  private ListView<String> extraMaterialsListView;
   private final TextField filterField = new TextField();
   private final TextArea blockDetails = new TextArea();
   private final Button applyToAll = new Button();
@@ -248,8 +245,8 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     filterBox.setSpacing(10);
     filterBox.getChildren().addAll(new Label("Filter:"), filterField);
 
-    listView.setMaxHeight(150);
-    extraMaterials.setMaxHeight(150);
+    blockSpecListView.setMaxHeight(150);
+    extraMaterialsListView.setMaxHeight(150);
     blockDetails.setMaxHeight(150);
     blockDetails.setEditable(false);
 
@@ -258,8 +255,8 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
 
     VBox listPane = new VBox();
     listPane.setSpacing(6);
-    listPane.getChildren().addAll(filterBox, new Label("Extra materials"), extraMaterials,
-        new Label("Block palette"),  listView, new Label("Block details"),  blockDetails,
+    listPane.getChildren().addAll(filterBox, new Label("Extra materials"), extraMaterialsListView,
+        new Label("Block palette"), blockSpecListView, new Label("Block details"),  blockDetails,
         applyToAll);
 
     addReferenceColor.setText("Add reference color");
@@ -494,7 +491,7 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     }
   }
 
-  private void updateSelectedMaterial2(BlockSpec blockSpec) {
+  private void updatePaletteMaterial(BlockSpec blockSpec) {
     if (blockSpec == null) {
       applyToAll.setDisable(true);
       blockDetails.clear();
@@ -637,15 +634,15 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
   }
 
   private void updateMaterialList(Scene scene) {
-    if (listView != null) {
-      listView.getSelectionModel().clearSelection();
+    if (blockSpecListView != null) {
+      blockSpecListView.getSelectionModel().clearSelection();
     } else {
-      listView = new ListView<>();
+      blockSpecListView = new ListView<>();
     }
-    if (extraMaterials != null) {
-      extraMaterials.getSelectionModel().clearSelection();
+    if (extraMaterialsListView != null) {
+      extraMaterialsListView.getSelectionModel().clearSelection();
     } else {
-      extraMaterials = new ListView<>();
+      extraMaterialsListView = new ListView<>();
     }
 
     ObservableList<BlockSpec> blockSpecs = FXCollections.observableArrayList();
@@ -653,39 +650,39 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
       blockSpecs.addAll(scene.getPalette().blockSpecs());
     }
 
-    FilteredList<BlockSpec> filteredList = new FilteredList<>(
+    FilteredList<BlockSpec> filteredBlockSpecs = new FilteredList<>(
         new SortedList<>(blockSpecs, Comparator.naturalOrder())
     );
 
-    listView.setCellFactory(list -> new BlockSpecCell());
-    listView.setItems(filteredList);
-    listView.getSelectionModel().selectedItemProperty().addListener(
-        (observable, oldValue, materialName) -> {
-          extraMaterials.getSelectionModel().clearSelection();
-          updateSelectedMaterial2(materialName);
+    blockSpecListView.setCellFactory(list -> new BlockSpecCell());
+    blockSpecListView.setItems(filteredBlockSpecs);
+    blockSpecListView.getSelectionModel().selectedItemProperty().addListener(
+        (observable, oldValue, blockSpec) -> {
+          extraMaterialsListView.getSelectionModel().clearSelection();
+          updatePaletteMaterial(blockSpec);
         }
     );
 
     ObservableList<String> extraMaterialsList = FXCollections.observableArrayList(ExtraMaterials.idMap.keySet());
-    FilteredList<String> filteredList1 = new FilteredList<>(
+    FilteredList<String> filteredExtraMaterials = new FilteredList<>(
         new SortedList<>(extraMaterialsList, Comparator.naturalOrder())
     );
 
-    extraMaterials.setItems(filteredList1);
-    extraMaterials.getSelectionModel().selectedItemProperty().addListener(
+    extraMaterialsListView.setItems(filteredExtraMaterials);
+    extraMaterialsListView.getSelectionModel().selectedItemProperty().addListener(
         (observable, oldValue, materialName) -> {
-          listView.getSelectionModel().clearSelection();
+          blockSpecListView.getSelectionModel().clearSelection();
           updateSelectedMaterial(materialName);
         }
     );
 
     filterField.textProperty().addListener((observable, oldValue, newValue) -> {
       if (newValue.trim().isEmpty()) {
-        filteredList.setPredicate(blockSpec -> true);
-        filteredList1.setPredicate(name -> true);
+        filteredBlockSpecs.setPredicate(blockSpec -> true);
+        filteredExtraMaterials.setPredicate(name -> true);
       } else {
-        filteredList.setPredicate(blockSpec -> blockSpec.toString().contains(newValue));
-        filteredList1.setPredicate(name -> name.contains(newValue));
+        filteredBlockSpecs.setPredicate(blockSpec -> blockSpec.toString().contains(newValue));
+        filteredExtraMaterials.setPredicate(name -> name.contains(newValue));
       }
     });
   }
