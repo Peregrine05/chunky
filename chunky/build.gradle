@@ -32,7 +32,7 @@ dependencies {
 javafx {
   version = '17.0.11'
   configuration = 'implementation'
-  modules = ['javafx.base', 'javafx.controls', 'javafx.fxml', 'javafx.media']
+  modules = ['javafx.base', 'javafx.controls', 'javafx.fxml']
 }
 
 jar {
