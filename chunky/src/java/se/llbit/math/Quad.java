@@ -157,6 +157,7 @@ public class Quad implements Intersectable {
    *
    * @return <code>true</code> if the ray intersects this quad
    */
+  @Override
   public boolean closestIntersection(Ray ray, IntersectionRecord intersectionRecord, Scene scene, Random random) {
     double u, v;
 
