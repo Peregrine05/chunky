@@ -12,11 +12,9 @@ import se.llbit.nbt.Tag;
 import se.llbit.util.NbtUtil;
 import se.llbit.util.annotation.NotNull;
 
-public class BlockSpec {
+public record BlockSpec(Tag tag) implements Comparable<BlockSpec> {
 
   public static final List<BlockProvider> blockProviders = new LinkedList<>();
-
-  private final Tag tag;
 
   public BlockSpec(@NotNull Tag tag) {
     this.tag = tag;
@@ -32,11 +30,6 @@ public class BlockSpec {
 
   public void serialize(DataOutputStream out) throws IOException {
     NbtUtil.safeSerialize(out, tag);
-  }
-
-  @Override
-  public int hashCode() {
-    return tag.hashCode();
   }
 
   @Override
@@ -67,5 +60,20 @@ public class BlockSpec {
 
   public Tag getTag() {
     return tag;
+  }
+
+  public String details() {
+    return tag.dumpTree();
+  }
+
+  @Override
+  public String toString() {
+    return tag.get("Name").stringValue("unknown:unknown");
+  }
+
+  @Override
+  public int compareTo(BlockSpec o) {
+    return tag.get("Name").stringValue("unknown:unknown")
+        .compareTo(o.tag.get("Name").stringValue("unknown:unknown"));
   }
 }
