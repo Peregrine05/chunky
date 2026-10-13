@@ -26,6 +26,7 @@ import se.llbit.math.Constants;
 import se.llbit.math.IntersectionRecord;
 import se.llbit.math.QuickMath;
 import se.llbit.math.Vector4;
+import se.llbit.util.concurrent.ChunkyThread;
 import se.llbit.util.ImageTools;
 
 /**
@@ -36,7 +37,7 @@ import se.llbit.util.ImageTools;
  */
 public class SkymapTexture extends Texture {
 
-  class TexturePreprocessor extends Thread {
+  class TexturePreprocessor extends ChunkyThread {
     private final int x0;
     private final int x1;
     private final int y0;

@@ -81,6 +81,7 @@ import se.llbit.math.structures.Position2IntStructure;
 import se.llbit.nbt.*;
 import se.llbit.util.*;
 import se.llbit.util.annotation.NotNull;
+import se.llbit.util.concurrent.ChunkyThread;
 import se.llbit.util.io.PositionalInputStream;
 import se.llbit.util.io.ZipExport;
 import se.llbit.util.mojangapi.MinecraftProfile;
@@ -954,7 +955,7 @@ public class Scene implements Configurable {
 
       int[] cubeWorldBlocks = new int[16*16*16];
 
-      ExecutorService executor = Executors.newSingleThreadExecutor();
+      ExecutorService executor = ChunkyThread.addExecutorService(Executors::newSingleThreadExecutor);
 
       ChunkData[] regionParsingDataArray = new ChunkData[MCRegion.CHUNKS_X * MCRegion.CHUNKS_Z];
       ChunkData[] chunkLoadingDataArray = new ChunkData[MCRegion.CHUNKS_X * MCRegion.CHUNKS_Z];
