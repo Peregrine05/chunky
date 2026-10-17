@@ -34,7 +34,7 @@ import java.util.Random;
  * @author Stefan Gustavson
  * @author Keijiro Takahashi
  */
-public final class SimplexNoise
+public final class SimplexNoise implements Noise
 {
   // The noise value from the last calculation
   public float value;
@@ -43,6 +43,10 @@ public final class SimplexNoise
   public float ddx;
   public float ddy;
   public float ddz;
+
+  public double calculate(double x, double y, double z) {
+    return calculate((float) x, (float) y, (float) z);
+  }
 
   // 3D simplex noise
   public float calculate(float x, float y, float z)

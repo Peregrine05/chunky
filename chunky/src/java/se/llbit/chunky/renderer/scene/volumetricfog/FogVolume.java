@@ -2,7 +2,7 @@ package se.llbit.chunky.renderer.scene.volumetricfog;
 
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.ToggleSwitch;
-import se.llbit.chunky.renderer.scene.SimplexNoiseConfig;
+import se.llbit.chunky.renderer.scene.FractalNoiseConfig;
 import se.llbit.chunky.renderer.scene.Scene;
 import se.llbit.chunky.resources.Texture;
 import se.llbit.chunky.ui.DoubleAdjuster;
@@ -24,11 +24,11 @@ public abstract class FogVolume implements HasControls, Configurable, Intersecta
   /**
    * Custom Simplex Noise Config for volumetric fog.
    */
-  public static class NoiseConfig extends SimplexNoiseConfig {
+  public static class NoiseConfig extends FractalNoiseConfig {
     public boolean useNoise = false;
     public int marchSteps = 10;
-    public double lowerThreshold = -10;
-    public double upperThreshold = -0.5;
+    public double lowerThreshold = 0.5;
+    public double upperThreshold = 10;
     public boolean cutoff = true;
 
     @Override
@@ -148,6 +148,8 @@ public abstract class FogVolume implements HasControls, Configurable, Intersecta
   protected JsonObject saveMaterialProperties() {
     JsonObject json = new JsonObject();
     json.add("density", material.volumeDensity);
+    json.add("absorption", material.absorption);
+    json.add("absorptionColor", ColorUtil.rgbToJson(material.absorptionColor));
     json.add("anisotropy", material.volumeAnisotropy);
     json.add("emittance", material.volumeEmittance);
     json.add("color", ColorUtil.rgbToJson(material.volumeColor));
@@ -156,6 +158,8 @@ public abstract class FogVolume implements HasControls, Configurable, Intersecta
 
   protected void loadMaterialProperties(JsonObject json) {
     material.volumeDensity = json.get("density").floatValue(material.volumeDensity);
+    material.absorption = json.get("absorption").floatValue(material.absorption);
+    material.absorptionColor.set(ColorUtil.jsonToRGB(json.get("color").asObject(), material.absorptionColor));
     material.volumeAnisotropy = json.get("anisotropy").floatValue(material.volumeAnisotropy);
     material.volumeEmittance = json.get("emittance").floatValue(material.volumeEmittance);
     material.volumeColor.set(ColorUtil.jsonToRGB(json.get("color").asObject(), material.volumeColor));

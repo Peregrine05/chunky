@@ -80,13 +80,14 @@ public class LayerFogVolume extends ContinuousFogVolume {
 
       if (noiseConfig.useNoise) {
         o.scaleAdd(dist, ray.d);
-        float noiseValue = noiseConfig.calculate((float) o.x, (float) o.y, (float) o.z);
         if (noiseConfig.cutoff) {
+          double noiseValue = noiseConfig.calculate((float) o.x, (float) o.y, (float) o.z, noiseConfig.lowerThreshold);
           if (noiseValue < noiseConfig.lowerThreshold || noiseValue > noiseConfig.upperThreshold) {
             distance += dist;
             continue;
           }
         } else {
+          double noiseValue = noiseConfig.calculate((float) o.x, (float) o.y, (float) o.z);
           if (random.nextDouble(noiseConfig.lowerThreshold, noiseConfig.upperThreshold + Constants.EPSILON) > noiseValue) {
             distance += dist;
             continue;

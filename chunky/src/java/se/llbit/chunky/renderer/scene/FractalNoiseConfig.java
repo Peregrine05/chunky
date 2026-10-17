@@ -5,42 +5,45 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import org.apache.commons.math3.util.FastMath;
 import se.llbit.chunky.ui.DoubleAdjuster;
 import se.llbit.chunky.ui.DoubleTextField;
 import se.llbit.chunky.ui.IntegerAdjuster;
 import se.llbit.chunky.ui.elements.TextFieldLabelWrapper;
 import se.llbit.chunky.ui.render.RenderControlsTab;
 import se.llbit.json.JsonObject;
-import se.llbit.math.SimplexNoise;
+import se.llbit.math.Noise;
+import se.llbit.math.PerlinNoise;
 import se.llbit.math.Vector3;
 import se.llbit.util.Configurable;
 import se.llbit.util.HasControls;
 
 /**
- * Wraps a {@link se.llbit.math.SimplexNoise} instance and provides controls for the noise.
+ * Wraps a {@link se.llbit.math.Noise} instance and provides controls for the noise.
  */
-public class SimplexNoiseConfig implements Configurable, HasControls {
+public class FractalNoiseConfig implements Configurable, HasControls {
   private long seed;
   private int iterations = 5;
-  private float gain = 0.5f;
-  private float lacunarity = 2;
-  private float amplitude = 1;
-  private float frequency = 0.01f;
+  private double gain = 0.5f;
+  private double lacunarity = 2;
+  private double amplitude = 1;
+  private double frequency = 0.01f;
   private final Vector3 scale = new Vector3(1);
   private final Vector3 offset = new Vector3();
-  private SimplexNoise simplexNoise;
+  private Noise simplexNoise;
 
-  public SimplexNoiseConfig() {
-    this(0);
+  public FractalNoiseConfig() {
+    this.seed = 0;
+    this.simplexNoise = new PerlinNoise();
   }
 
-  public SimplexNoiseConfig(long seed) {
+  public FractalNoiseConfig(long seed) {
     setSeed(seed);
   }
 
   public void setSeed(long seed) {
     this.seed = seed;
-    this.simplexNoise = new SimplexNoise(seed);
+    this.simplexNoise = new PerlinNoise(seed);
   }
 
   public long getSeed() {
@@ -59,7 +62,7 @@ public class SimplexNoiseConfig implements Configurable, HasControls {
     this.amplitude = amplitude;
   }
 
-  public float getAmplitude() {
+  public double getAmplitude() {
     return this.amplitude;
   }
 
@@ -67,7 +70,7 @@ public class SimplexNoiseConfig implements Configurable, HasControls {
     this.frequency = frequency;
   }
 
-  public float getFrequency() {
+  public double getFrequency() {
     return this.frequency;
   }
 
@@ -75,7 +78,7 @@ public class SimplexNoiseConfig implements Configurable, HasControls {
     this.gain = gain;
   }
 
-  public float getGain() {
+  public double getGain() {
     return this.gain;
   }
 
@@ -83,7 +86,7 @@ public class SimplexNoiseConfig implements Configurable, HasControls {
     this.lacunarity = lacunarity;
   }
 
-  public float getLacunarity() {
+  public double getLacunarity() {
     return this.lacunarity;
   }
 
@@ -135,15 +138,15 @@ public class SimplexNoiseConfig implements Configurable, HasControls {
     return this.offset.z;
   }
 
-  public float calculate(float x, float y, float z) {
-    float value = 0;
-    float amplitude = this.amplitude;
-    float frequency = this.frequency;
+  public double calculate(float x, float y, float z) {
+    double value = 0;
+    double amplitude = this.amplitude;
+    double frequency = this.frequency;
     for (int i = 0; i < this.iterations; i++) {
       value += this.simplexNoise.calculate(
-        (x + (float) this.offset.x) / (float) this.scale.x * frequency,
-        (y + (float) this.offset.y) / (float) this.scale.y * frequency,
-        (z + (float) this.offset.z) / (float) this.scale.z * frequency
+        (x + this.offset.x) / this.scale.x * frequency,
+        (y + this.offset.y) / this.scale.y * frequency,
+        (z + this.offset.z) / this.scale.z * frequency
       ) * amplitude;
 
       frequency *= lacunarity;
@@ -152,7 +155,30 @@ public class SimplexNoiseConfig implements Configurable, HasControls {
     return value;
   }
 
-  public SimplexNoise getSimplexNoise() {
+  public double calculate(float x, float y, float z, double minValue) {
+    double value = 0;
+    double amplitude = this.amplitude;
+    double frequency = this.frequency;
+    for (int i = 0; i < this.iterations; i++) {
+      double octave = this.simplexNoise.calculate(
+        (x + this.offset.x) / this.scale.x * frequency,
+        (y + this.offset.y) / this.scale.y * frequency,
+        (z + this.offset.z) / this.scale.z * frequency
+      ) * amplitude;
+
+      value += octave;
+
+      if (value + (FastMath.pow(gain, this.iterations + 1) - FastMath.pow(gain, i))/(gain - 1) < minValue) {
+        return 0;
+      }
+
+      frequency *= lacunarity;
+      amplitude *= gain;
+    }
+    return value;
+  }
+
+  public Noise getSimplexNoise() {
     return this.simplexNoise;
   }
 
@@ -160,10 +186,10 @@ public class SimplexNoiseConfig implements Configurable, HasControls {
   public void fromJson(JsonObject json) {
     seed = json.get("seed").longValue(seed);
     iterations = json.get("iterations").intValue(iterations);
-    amplitude = json.get("amplitude").floatValue(amplitude);
-    frequency = json.get("frequency").floatValue(frequency);
-    gain = json.get("gain").floatValue(gain);
-    lacunarity = json.get("lacunarity").floatValue(lacunarity);
+    amplitude = json.get("amplitude").doubleValue(amplitude);
+    frequency = json.get("frequency").doubleValue(frequency);
+    gain = json.get("gain").doubleValue(gain);
+    lacunarity = json.get("lacunarity").doubleValue(lacunarity);
     scale.fromJson(json.get("scale").asObject());
     offset.fromJson(json.get("offset").asObject());
     setSeed(seed);

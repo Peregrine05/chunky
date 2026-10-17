@@ -31,6 +31,8 @@ public class SphericalFogVolume extends DiscreteFogVolume {
   private final Vector3 center = new Vector3();
   private double radius = DEFAULT_RADIUS;
 
+  private final Matrix3 transform = new Matrix3();
+
   @Override
   public AABB bounds() {
     return new AABB(
@@ -103,13 +105,14 @@ public class SphericalFogVolume extends DiscreteFogVolume {
       }
       if (noiseConfig.useNoise) {
         o.scaleAdd(dist, ray.d);
-        float noiseValue = noiseConfig.calculate((float) o.x, (float) o.y, (float) o.z);
         if (noiseConfig.cutoff) {
+          double noiseValue = noiseConfig.calculate((float) o.x, (float) o.y, (float) o.z, noiseConfig.lowerThreshold);
           if (noiseValue < noiseConfig.lowerThreshold || noiseValue > noiseConfig.upperThreshold) {
             distance += dist;
             continue;
           }
         } else {
+          double noiseValue = noiseConfig.calculate((float) o.x, (float) o.y, (float) o.z);
           if (random.nextDouble(noiseConfig.lowerThreshold, noiseConfig.upperThreshold + Constants.EPSILON) > noiseValue) {
             distance += dist;
             continue;
