@@ -94,7 +94,8 @@ public class PathTracer implements RayTracer {
 
         // Sun sampling
 
-        if (scene.sunSamplingStrategy.doSunSampling() && (ray.isDiffuse() || state.intersectionRecord.isVolumeIntersect())) {
+        if (scene.sunSamplingStrategy.doSunSampling()
+          && (ray.isDiffuse() || state.intersectionRecord.isVolumeIntersect())) {
           doSunSampling(scene, state, i);
         }
 
@@ -103,7 +104,9 @@ public class PathTracer implements RayTracer {
         // This is a simplistic fog model which gives greater artistic freedom but
         // less realism. The user can select fog color and density; in a more
         // realistic model color would depend on viewing angle and sun color/position.
-        if (intersectionRecord.distance > 0 && scene.fog.isFogEnabled() && (ray.getCurrentMedium() == Air.INSTANCE || ray.getCurrentMedium() == Void.INSTANCE)) {
+        if (intersectionRecord.distance > 0
+          && scene.fog.isFogEnabled()
+          && (ray.getCurrentMedium() == Air.INSTANCE || ray.getCurrentMedium() == Void.INSTANCE)) {
           sampleFog(scene, state, ox, od, i);
         }
 
@@ -112,8 +115,7 @@ public class PathTracer implements RayTracer {
 
         if (scene.emitterSamplingStrategy != EmitterSamplingStrategy.NONE
             && scene.getEmitterGrid() != null
-            && (ray.isDiffuse()
-                || intersectionRecord.isVolumeIntersect())) {
+            && (ray.isDiffuse() || intersectionRecord.isVolumeIntersect())) {
           doEmitterSampling(scene, state, prevFlags);
         }
 
