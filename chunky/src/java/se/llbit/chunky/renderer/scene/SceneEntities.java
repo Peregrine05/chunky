@@ -168,6 +168,8 @@ public class SceneEntities implements Intersectable {
             addActor(new MooshroomEntity(new Vector3(x, y, z), tag));
           } else if ((id.equals("minecraft:squid") || id.equals("Squid")) && entityLoadingPreferences.shouldLoadClass(SquidEntity.class)) {
             addActor(new SquidEntity(new Vector3(x, y, z), tag));
+          } else if (id.equals("minecraft:cushion") && entityLoadingPreferences.shouldLoadClass(Cushion.class)) {
+            addEntity(new Cushion(new Vector3(x, y, z), tag.get("color").stringValue("white")));
           }
         }
       }
