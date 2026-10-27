@@ -22,6 +22,7 @@ import se.llbit.chunky.plugin.PluginApi;
 import se.llbit.json.JsonValue;
 import se.llbit.math.Octree;
 import se.llbit.nbt.*;
+import se.llbit.util.NbtUtil;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -964,7 +965,7 @@ public class BlockPalette {
     out.writeInt(specs.length);
     for (BlockSpec spec : specs) {
       out.writeByte(((SpecificTag) spec.getTag()).tagType());
-      spec.serialize(out);
+      NbtUtil.safeSerialize(out, spec.getTag());
     }
   }
 
@@ -982,7 +983,11 @@ public class BlockPalette {
         type = in.readByte();
       }
 
-      BlockSpec spec = BlockSpec.deserialize(type, in);
+      Tag tag = SpecificTag.read(type, in);
+      if (tag.isError()) {
+        throw new IOException("Error while reading block palette: " + tag.error());
+      }
+      BlockSpec spec = new BlockSpec(tag);
       blockMap.put(spec, i);
       blocks.add(spec.toBlock());
     }
