@@ -68,7 +68,7 @@ public class GrassBlockModel extends AABBModel {
   }
   
   @Override
-  public boolean intersectFace(IntersectionRecord intersectionRecord, Scene scene, Texture texture, UVMapping mapping) {
+  protected boolean intersectFace(IntersectionRecord intersectionRecord, Texture texture, UVMapping mapping) {
     // This is the method that handles intersecting faces of all AABB-based models.
     // Do normal mapping, parallax occlusion mapping, specular maps and all the good stuff here!
 

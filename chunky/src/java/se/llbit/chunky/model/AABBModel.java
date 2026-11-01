@@ -163,7 +163,7 @@ public abstract class AABBModel implements BlockModel {
     return hit;
   }
 
-  private boolean intersectFace(IntersectionRecord intersectionRecord, Texture texture, UVMapping mapping) {
+  protected boolean intersectFace(IntersectionRecord intersectionRecord, Texture texture, UVMapping mapping) {
     // This is the method that handles intersecting faces of all AABB-based models.
     // Do normal mapping, parallax occlusion mapping, specular maps and all the good stuff here!
 
