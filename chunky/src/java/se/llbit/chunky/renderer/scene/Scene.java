@@ -910,8 +910,9 @@ public class Scene implements Configurable {
       dryFoliageTexture = biomeStructureFactory.create();
       waterTexture = biomeStructureFactory.create();
 
-      if(emitterSamplingStrategy != EmitterSamplingStrategy.NONE)
+      if (emitterSamplingStrategy != EmitterSamplingStrategy.NONE) {
         emitterGrid = new Grid(gridSize);
+      }
 
       for (RegionPosition region : chunksToLoadByRegion.keySet()) {
         dimension.getRegion(region).parse(yMin, yMax);
@@ -919,7 +920,7 @@ public class Scene implements Configurable {
     }
 
     try (TaskTracker.Task task = taskTracker.task("(2/7) Loading entities")) {
-     entities.loadPlayers(task, dimension);
+      entities.loadPlayers(task, dimension);
     }
 
     BiomePalette biomePalette = new ArrayBiomePalette();
@@ -1028,10 +1029,11 @@ public class Scene implements Configurable {
                 for (int cx = 0; cx < 16; ++cx) {
                   int wx = cx + wx0;
                   int biomePaletteIdx = biomeData.getBiome(cx, y, cz);
-                  if(y != yMin) {
+                  if (y != yMin) {
                     int biomeUnder = biomeData.getBiome(cx, y-1, cz);
-                    if(biomeUnder != biomePaletteIdx)
+                    if (biomeUnder != biomePaletteIdx) {
                       chunkBiomeHelper.addTransition(y);
+                    }
                   }
                   biomePaletteIdxStructure.set(wx, y, wz, biomePaletteIdx);
                 }
@@ -1050,200 +1052,201 @@ public class Scene implements Configurable {
 
           entities.loadEntitiesInChunk(this, chunkData);
 
-        int yCubeMin = Math.floorDiv(yMin, 16);
-        int yCubeMax = (yMax+15) / 16;
-        for(int yCube = yCubeMin; yCube < yCubeMax; ++yCube) {
-          // Reset the cubes
-          Arrays.fill(cubeWorldBlocks, 1);
-          for(int cy = 0; cy < 16; ++cy) { //Uses chunk min and max, rather than global - minor optimisation for pre1.13 worlds
-            int y = yCube * 16 + cy;
-            if (y < yMin || y >= yMax)
-              continue;
-            for (int cz = 0; cz < 16; ++cz) {
-              int z = cz + cp.z * 16 - origin.z;
-              for (int cx = 0; cx < 16; ++cx) {
-                int x = cx + cp.x * 16 - origin.x;
+          int yCubeMin = Math.floorDiv(yMin, 16);
+          int yCubeMax = (yMax+15) / 16;
+          for (int yCube = yCubeMin; yCube < yCubeMax; ++yCube) {
+            // Reset the cubes
+            Arrays.fill(cubeWorldBlocks, 1);
+            for (int cy = 0; cy < 16; ++cy) { //Uses chunk min and max, rather than global - minor optimisation for pre1.13 worlds
+              int y = yCube * 16 + cy;
+              if (y < yMin || y >= yMax) {
+                continue;
+              }
+              for (int cz = 0; cz < 16; ++cz) {
+                int z = cz + cp.z * 16 - origin.z;
+                for (int cx = 0; cx < 16; ++cx) {
+                  int x = cx + cp.x * 16 - origin.x;
 
-                int cubeIndex = (cz * 16 + cy) * 16 + cx;
+                  int cubeIndex = (cz * 16 + cy) * 16 + cx;
 
-                // Change the type of hidden blocks to ANY_TYPE
-                boolean onEdge = y <= yMin || y >= yMax - 1 || chunkData.isBlockOnEdge(cx, y, cz);
-                boolean isHidden = !onEdge
-                    && palette.get(chunkData.getBlockAt(cx + 1, y, cz)).opaque
-                    && palette.get(chunkData.getBlockAt(cx - 1, y, cz)).opaque
-                    && palette.get(chunkData.getBlockAt(cx, y + 1, cz)).opaque
-                    && palette.get(chunkData.getBlockAt(cx, y - 1, cz)).opaque
-                    && palette.get(chunkData.getBlockAt(cx, y, cz + 1)).opaque
-                    && palette.get(chunkData.getBlockAt(cx, y, cz - 1)).opaque;
+                  // Change the type of hidden blocks to ANY_TYPE
+                  boolean onEdge = y <= yMin || y >= yMax - 1 || chunkData.isBlockOnEdge(cx, y, cz);
+                  boolean isHidden = !onEdge
+                      && palette.get(chunkData.getBlockAt(cx + 1, y, cz)).opaque
+                      && palette.get(chunkData.getBlockAt(cx - 1, y, cz)).opaque
+                      && palette.get(chunkData.getBlockAt(cx, y + 1, cz)).opaque
+                      && palette.get(chunkData.getBlockAt(cx, y - 1, cz)).opaque
+                      && palette.get(chunkData.getBlockAt(cx, y, cz + 1)).opaque
+                      && palette.get(chunkData.getBlockAt(cx, y, cz - 1)).opaque;
 
-                if (isHidden) {
-                  cubeWorldBlocks[cubeIndex] = Octree.ANY_TYPE;
-                } else {
-                  int currentBlock = chunkData.getBlockAt(cx, y, cz);
-                  int octNode = currentBlock;
-                  Block block = palette.get(currentBlock);
+                  if (isHidden) {
+                    cubeWorldBlocks[cubeIndex] = Octree.ANY_TYPE;
+                  } else {
+                    int currentBlock = chunkData.getBlockAt(cx, y, cz);
+                    int octNode = currentBlock;
+                    Block block = palette.get(currentBlock);
 
-                  if (block.isBiomeDependant()) {
-                    chunkBiomeHelper.makeBiomeRelevant(y);
-                  }
+                    if (block.isBiomeDependant()) {
+                      chunkBiomeHelper.makeBiomeRelevant(y);
+                    }
 
-                  if (block.isEntity()) {
-                    Vector3 position = new Vector3(cx + cp.x * 16, y, cz + cp.z * 16);
-                    Entity entity = block.toEntity(position);
+                    if (block.isEntity()) {
+                      Vector3 position = new Vector3(cx + cp.x * 16, y, cz + cp.z * 16);
+                      Entity entity = block.toEntity(position);
 
-                    if (entities.shouldLoad(entity)) {
-                      if (entity instanceof Poseable && !(entity instanceof Lectern
-                          && !((Lectern) entity).hasBook())) {
-                        entities.addActor(entity);
-                      } else {
-                        entities.addEntity(entity);
-                        if (emitterGrid != null) {
-                          for (Grid.EmitterPosition emitterPos : entity.getEmitterPosition()) {
-                            emitterPos.x -= origin.x;
-                            emitterPos.y -= origin.y;
-                            emitterPos.z -= origin.z;
-                            emitterGrid.addEmitter(emitterPos);
+                      if (entities.shouldLoad(entity)) {
+                        if (entity instanceof Poseable && !(entity instanceof Lectern
+                            && !((Lectern) entity).hasBook())) {
+                          entities.addActor(entity);
+                        } else {
+                          entities.addEntity(entity);
+                          if (emitterGrid != null) {
+                            for (Grid.EmitterPosition emitterPos : entity.getEmitterPosition()) {
+                              emitterPos.x -= origin.x;
+                              emitterPos.y -= origin.y;
+                              emitterPos.z -= origin.z;
+                              emitterGrid.addEmitter(emitterPos);
+                            }
+                          }
+                        }
+
+                        if (!block.isBlockWithEntity()) {
+                          if (block.waterlogged) {
+                            block = palette.water;
+                            octNode = palette.waterId;
+                          } else {
+                            block = Air.INSTANCE;
+                            octNode = palette.airId;
                           }
                         }
                       }
+                    }
 
-                      if (!block.isBlockWithEntity()) {
-                        if (block.waterlogged) {
-                          block = palette.water;
-                          octNode = palette.waterId;
-                        } else {
-                          block = Air.INSTANCE;
-                          octNode = palette.airId;
+                    if (block.isWater()) {
+                      octNode = palette.waterId;
+                      if (y + 1 < yMax) {
+                        if (palette.get(chunkData.getBlockAt(cx, y + 1, cz)).isWaterFilled()) {
+                          octNode = palette.getWaterId(0, 1 << Water.FULL_BLOCK_DATA);
                         }
                       }
-                    }
-                  }
 
-                  if (block.isWater()) {
-                    octNode = palette.waterId;
-                    if (y + 1 < yMax) {
-                      if (palette.get(chunkData.getBlockAt(cx, y + 1, cz)).isWaterFilled()) {
-                        octNode = palette.getWaterId(0, 1 << Water.FULL_BLOCK_DATA);
+                      if (!onEdge) {
+                        // Perform water computation now for water blocks that are not on th edge of the chunk
+                        // Test if the block has not already be marked as full
+                        if (((Water) palette.get(octNode)).data == 0) {
+                          int level0 = 8 - ((Water) block).level;
+                          int corner0 = level0;
+                          int corner1 = level0;
+                          int corner2 = level0;
+                          int corner3 = level0;
+
+                          int level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz, level0);
+                          corner3 += level;
+                          corner0 += level;
+
+                          level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz + 1, level0);
+                          corner0 += level;
+
+                          level = Chunk.waterLevelAt(chunkData, palette, cx, y, cz + 1, level0);
+                          corner0 += level;
+                          corner1 += level;
+
+                          level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz + 1, level0);
+                          corner1 += level;
+
+                          level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz, level0);
+                          corner1 += level;
+                          corner2 += level;
+
+                          level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz - 1, level0);
+                          corner2 += level;
+
+                          level = Chunk.waterLevelAt(chunkData, palette, cx, y, cz - 1, level0);
+                          corner2 += level;
+                          corner3 += level;
+
+                          level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz - 1, level0);
+                          corner3 += level;
+
+                          corner0 = Math.min(7, 8 - (corner0 / 4));
+                          corner1 = Math.min(7, 8 - (corner1 / 4));
+                          corner2 = Math.min(7, 8 - (corner2 / 4));
+                          corner3 = Math.min(7, 8 - (corner3 / 4));
+                          octNode = palette.getWaterId(((Water) block).level,
+                              (corner0 << WaterModel.CORNER_0)
+                                  | (corner1 << WaterModel.CORNER_1)
+                                  | (corner2 << WaterModel.CORNER_2)
+                                  | (corner3 << WaterModel.CORNER_3));
+                        }
+                      } else {
+                        // Water computation for water blocks on the edge of a chunk is done by the OctreeFinalizer but we need the water level information
+                        octNode = palette.getWaterId(((Water) block).level, 0);
                       }
-                    }
-
-                    if (!onEdge) {
-                      // Perform water computation now for water blocks that are not on th edge of the chunk
-                      // Test if the block has not already be marked as full
-                      if (((Water) palette.get(octNode)).data == 0) {
-                        int level0 = 8 - ((Water) block).level;
+                    } else if (y + 1 < yMax && block instanceof Lava) {
+                      if (palette.get(chunkData.getBlockAt(cx, y + 1, cz)) instanceof Lava) {
+                        octNode = palette.getLavaId(0, 1 << Water.FULL_BLOCK_DATA);
+                      } else if (!onEdge) {
+                        // Compute lava level for blocks not on edge
+                        Lava lava = (Lava) block;
+                        int level0 = 8 - lava.level;
                         int corner0 = level0;
                         int corner1 = level0;
                         int corner2 = level0;
                         int corner3 = level0;
 
-                        int level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz, level0);
+                        int level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz, level0);
                         corner3 += level;
                         corner0 += level;
 
-                        level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz + 1, level0);
+                        level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz + 1, level0);
                         corner0 += level;
 
-                        level = Chunk.waterLevelAt(chunkData, palette, cx, y, cz + 1, level0);
+                        level = Chunk.lavaLevelAt(chunkData, palette, cx, y, cz + 1, level0);
                         corner0 += level;
                         corner1 += level;
 
-                        level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz + 1, level0);
+                        level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz + 1, level0);
                         corner1 += level;
 
-                        level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz, level0);
+                        level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz, level0);
                         corner1 += level;
                         corner2 += level;
 
-                        level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz - 1, level0);
+                        level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz - 1, level0);
                         corner2 += level;
 
-                        level = Chunk.waterLevelAt(chunkData, palette, cx, y, cz - 1, level0);
+                        level = Chunk.lavaLevelAt(chunkData, palette, cx, y, cz - 1, level0);
                         corner2 += level;
                         corner3 += level;
 
-                        level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz - 1, level0);
+                        level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz - 1, level0);
                         corner3 += level;
 
                         corner0 = Math.min(7, 8 - (corner0 / 4));
                         corner1 = Math.min(7, 8 - (corner1 / 4));
                         corner2 = Math.min(7, 8 - (corner2 / 4));
                         corner3 = Math.min(7, 8 - (corner3 / 4));
-                        octNode = palette.getWaterId(((Water) block).level,
+                        octNode = palette.getLavaId(
+                            lava.level,
                             (corner0 << WaterModel.CORNER_0)
                                 | (corner1 << WaterModel.CORNER_1)
                                 | (corner2 << WaterModel.CORNER_2)
-                                | (corner3 << WaterModel.CORNER_3));
+                                | (corner3 << WaterModel.CORNER_3)
+                        );
                       }
-                    } else {
-                      // Water computation for water blocks on the edge of a chunk is done by the OctreeFinalizer but we need the water level information
-                      octNode = palette.getWaterId(((Water) block).level, 0);
                     }
-                  } else if (y + 1 < yMax && block instanceof Lava) {
-                    if (palette.get(chunkData.getBlockAt(cx, y + 1, cz)) instanceof Lava) {
-                      octNode = palette.getLavaId(0, 1 << Water.FULL_BLOCK_DATA);
-                    } else if (!onEdge) {
-                      // Compute lava level for blocks not on edge
-                      Lava lava = (Lava) block;
-                      int level0 = 8 - lava.level;
-                      int corner0 = level0;
-                      int corner1 = level0;
-                      int corner2 = level0;
-                      int corner3 = level0;
+                    cubeWorldBlocks[cubeIndex] = octNode;
 
-                      int level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz, level0);
-                      corner3 += level;
-                      corner0 += level;
-
-                      level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz + 1, level0);
-                      corner0 += level;
-
-                      level = Chunk.lavaLevelAt(chunkData, palette, cx, y, cz + 1, level0);
-                      corner0 += level;
-                      corner1 += level;
-
-                      level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz + 1, level0);
-                      corner1 += level;
-
-                      level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz, level0);
-                      corner1 += level;
-                      corner2 += level;
-
-                      level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz - 1, level0);
-                      corner2 += level;
-
-                      level = Chunk.lavaLevelAt(chunkData, palette, cx, y, cz - 1, level0);
-                      corner2 += level;
-                      corner3 += level;
-
-                      level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz - 1, level0);
-                      corner3 += level;
-
-                      corner0 = Math.min(7, 8 - (corner0 / 4));
-                      corner1 = Math.min(7, 8 - (corner1 / 4));
-                      corner2 = Math.min(7, 8 - (corner2 / 4));
-                      corner3 = Math.min(7, 8 - (corner3 / 4));
-                      octNode = palette.getLavaId(
-                          lava.level,
-                          (corner0 << WaterModel.CORNER_0)
-                              | (corner1 << WaterModel.CORNER_1)
-                              | (corner2 << WaterModel.CORNER_2)
-                              | (corner3 << WaterModel.CORNER_3)
-                      );
+                    if (emitterGrid != null && block.emittance > 1e-4) {
+                      // X and Z are Chunky position but Y is world position
+                      emitterGrid.addEmitter(new Grid.EmitterPosition(x, y - origin.y, z, block));
                     }
-                  }
-                  cubeWorldBlocks[cubeIndex] = octNode;
-
-                  if (emitterGrid != null && block.emittance > 1e-4) {
-                    // X and Z are Chunky position but Y is world position
-                    emitterGrid.addEmitter(new Grid.EmitterPosition(x, y - origin.y, z, block));
                   }
                 }
               }
             }
+            worldOctree.setCube(4, cubeWorldBlocks, cp.x*16 - origin.x, yCube*16 - origin.y, cp.z*16 - origin.z);
           }
-          worldOctree.setCube(4, cubeWorldBlocks, cp.x*16 - origin.x, yCube*16 - origin.y, cp.z*16 - origin.z);
-        }
 
           // Block entities are also called "tile entities". These are extra bits of metadata
           // about certain blocks or entities.
