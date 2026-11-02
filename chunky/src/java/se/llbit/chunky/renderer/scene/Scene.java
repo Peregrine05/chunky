@@ -105,7 +105,7 @@ import static se.llbit.math.QuickMath.prevMul16;
  * <p>Render state is stored in a sample buffer. Two frame buffers
  * are also kept for when a snapshot should be rendered.
  */
-public class Scene implements Configurable, Refreshable {
+public class Scene implements Configurable {
   public static final int DEFAULT_DUMP_FREQUENCY = 500;
   public static final String EXTENSION = ".json";
 
@@ -3268,7 +3268,6 @@ public class Scene implements Configurable, Refreshable {
    * Called when the scene description has been altered in a way that
    * forces the rendering to restart.
    */
-  @Override
   public synchronized void refresh() {
     refresh(ResetReason.SETTINGS_CHANGED);
   }
