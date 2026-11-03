@@ -2738,7 +2738,7 @@ public class Scene implements Configurable {
         }
       } else if (((Block) material).isInside(ray)) {
         return material;
-      } else if (material.waterlogged) {
+      } else if (material.isWaterlogged()) {
         if (worldOctree.getMaterial(x, y + 1, z, palette).isWaterFilled()) {
           return palette.water;
         } else if (ray.o.y - QuickMath.floor(ray.o.y) < 1 - WaterModel.TOP_BLOCK_GAP) {
