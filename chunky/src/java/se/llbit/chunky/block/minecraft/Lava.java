@@ -31,7 +31,6 @@ import static se.llbit.chunky.model.minecraft.WaterModel.CORNER_2;
 import static se.llbit.chunky.model.minecraft.WaterModel.CORNER_3;
 
 public class Lava extends MinecraftBlockTranslucent {
-  private static final AABB fullBlock = new AABB(0, 1, 0, 1, 0, 1);
 
   private static final Quad bottom =
       new Quad(new Vector3(0, 0, 0), new Vector3(1, 0, 0), new Vector3(0, 0, 1),
@@ -58,7 +57,7 @@ public class Lava extends MinecraftBlockTranslucent {
 
   @Override public boolean intersect(Ray ray, IntersectionRecord intersectionRecord, Scene scene) {
     if (isFullBlock()) {
-      if (fullBlock.closestIntersection(ray, intersectionRecord)) {
+      if (FULL_BLOCK.closestIntersection(ray, intersectionRecord)) {
         texture.getColor(intersectionRecord);
         return true;
       }
