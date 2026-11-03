@@ -151,8 +151,8 @@ public class BlockPalette {
       id = palette.size();
       blockMap.put(spec, id);
       Block block = spec.toBlock();
+      applyMaterial(spec, block);
       palette.add(block);
-      applyMaterial(spec);
       return id;
     } finally {
       lock.unlock();
