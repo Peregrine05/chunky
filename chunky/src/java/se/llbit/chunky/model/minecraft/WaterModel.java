@@ -60,10 +60,10 @@ public class WaterModel {
   static final double[] height =
       {14 / 16., 12.25 / 16., 10.5 / 16, 8.75 / 16, 7. / 16, 5.25 / 16, 3.5 / 16, 1.75 / 16};
 
-  public static final int CORNER_0 = 0;
-  public static final int CORNER_1 = 4;
-  public static final int CORNER_2 = 8;
-  public static final int CORNER_3 = 12;
+  public static final int CORNER_SW = 0;
+  public static final int CORNER_SE = 4;
+  public static final int CORNER_NE = 8;
+  public static final int CORNER_NW = 12;
 
   public static final Quad FULL_BLOCK_BOTTOM_SIDE = new Quad(
     new Vector3(0, 0, 0),
@@ -155,10 +155,10 @@ public class WaterModel {
       hit = true;
     }
 
-    int c0 = (0xF & (data >> CORNER_0)) % 8;
-    int c1 = (0xF & (data >> CORNER_1)) % 8;
-    int c2 = (0xF & (data >> CORNER_2)) % 8;
-    int c3 = (0xF & (data >> CORNER_3)) % 8;
+    int c0 = (0xF & (data >> CORNER_SW)) % 8;
+    int c1 = (0xF & (data >> CORNER_SE)) % 8;
+    int c2 = (0xF & (data >> CORNER_NE)) % 8;
+    int c3 = (0xF & (data >> CORNER_NW)) % 8;
 
     Triangle triangle = westt[c0][c3];
     if (triangle.intersect(ray, intersectionRecord)) {
@@ -217,10 +217,10 @@ public class WaterModel {
   public static boolean intersect(Ray ray, IntersectionRecord intersectionRecord, Scene scene, int data) {
     boolean hit = false;
     
-    int c0 = (0xF & (data >> CORNER_0)) % 8;
-    int c1 = (0xF & (data >> CORNER_1)) % 8;
-    int c2 = (0xF & (data >> CORNER_2)) % 8;
-    int c3 = (0xF & (data >> CORNER_3)) % 8;
+    int c0 = (0xF & (data >> CORNER_SW)) % 8;
+    int c1 = (0xF & (data >> CORNER_SE)) % 8;
+    int c2 = (0xF & (data >> CORNER_NE)) % 8;
+    int c3 = (0xF & (data >> CORNER_NW)) % 8;
 
     Vector3 n = new Vector3(intersectionRecord.n);
 

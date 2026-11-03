@@ -25,10 +25,10 @@ import se.llbit.chunky.resources.Texture;
 import se.llbit.math.*;
 
 import static se.llbit.chunky.block.minecraft.Water.FULL_BLOCK_DATA;
-import static se.llbit.chunky.model.minecraft.WaterModel.CORNER_0;
-import static se.llbit.chunky.model.minecraft.WaterModel.CORNER_1;
-import static se.llbit.chunky.model.minecraft.WaterModel.CORNER_2;
-import static se.llbit.chunky.model.minecraft.WaterModel.CORNER_3;
+import static se.llbit.chunky.model.minecraft.WaterModel.CORNER_SW;
+import static se.llbit.chunky.model.minecraft.WaterModel.CORNER_SE;
+import static se.llbit.chunky.model.minecraft.WaterModel.CORNER_NE;
+import static se.llbit.chunky.model.minecraft.WaterModel.CORNER_NW;
 
 public class Lava extends MinecraftBlockTranslucent {
 
@@ -71,10 +71,10 @@ public class Lava extends MinecraftBlockTranslucent {
       hit = true;
     }
 
-    int c0 = (0xF & (data >> CORNER_0)) % 8;
-    int c1 = (0xF & (data >> CORNER_1)) % 8;
-    int c2 = (0xF & (data >> CORNER_2)) % 8;
-    int c3 = (0xF & (data >> CORNER_3)) % 8;
+    int c0 = (0xF & (data >> CORNER_SW)) % 8;
+    int c1 = (0xF & (data >> CORNER_SE)) % 8;
+    int c2 = (0xF & (data >> CORNER_NE)) % 8;
+    int c3 = (0xF & (data >> CORNER_NW)) % 8;
     Triangle triangle = WaterModel.t012[c0][c1][c2];
     if (triangle.intersect(ray, intersectionTest)) {
       intersectionRecord.setNormal(Vector3.orientNormal(ray.d, triangle.n));

@@ -1135,48 +1135,48 @@ public class Scene implements Configurable {
                         // Test if the block has not already be marked as full
                         if (((Water) palette.get(octNode)).data == 0) {
                           int level0 = 8 - ((Water) block).level;
-                          int corner0 = level0;
-                          int corner1 = level0;
-                          int corner2 = level0;
-                          int corner3 = level0;
+                          int cornerSW = level0;
+                          int cornerSE = level0;
+                          int cornerNE = level0;
+                          int cornerNW = level0;
 
                           int level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz, level0);
-                          corner3 += level;
-                          corner0 += level;
+                          cornerNW += level;
+                          cornerSW += level;
 
                           level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz + 1, level0);
-                          corner0 += level;
+                          cornerSW += level;
 
                           level = Chunk.waterLevelAt(chunkData, palette, cx, y, cz + 1, level0);
-                          corner0 += level;
-                          corner1 += level;
+                          cornerSW += level;
+                          cornerSE += level;
 
                           level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz + 1, level0);
-                          corner1 += level;
+                          cornerSE += level;
 
                           level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz, level0);
-                          corner1 += level;
-                          corner2 += level;
+                          cornerSE += level;
+                          cornerNE += level;
 
                           level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz - 1, level0);
-                          corner2 += level;
+                          cornerNE += level;
 
                           level = Chunk.waterLevelAt(chunkData, palette, cx, y, cz - 1, level0);
-                          corner2 += level;
-                          corner3 += level;
+                          cornerNE += level;
+                          cornerNW += level;
 
                           level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz - 1, level0);
-                          corner3 += level;
+                          cornerNW += level;
 
-                          corner0 = Math.min(7, 8 - (corner0 / 4));
-                          corner1 = Math.min(7, 8 - (corner1 / 4));
-                          corner2 = Math.min(7, 8 - (corner2 / 4));
-                          corner3 = Math.min(7, 8 - (corner3 / 4));
+                          cornerSW = Math.min(7, 8 - (cornerSW / 4));
+                          cornerSE = Math.min(7, 8 - (cornerSE / 4));
+                          cornerNE = Math.min(7, 8 - (cornerNE / 4));
+                          cornerNW = Math.min(7, 8 - (cornerNW / 4));
                           octNode = palette.getWaterId(((Water) block).level,
-                              (corner0 << WaterModel.CORNER_0)
-                                  | (corner1 << WaterModel.CORNER_1)
-                                  | (corner2 << WaterModel.CORNER_2)
-                                  | (corner3 << WaterModel.CORNER_3));
+                              (cornerSW << WaterModel.CORNER_SW)
+                                  | (cornerSE << WaterModel.CORNER_SE)
+                                  | (cornerNE << WaterModel.CORNER_NE)
+                                  | (cornerNW << WaterModel.CORNER_NW));
                         }
                       } else {
                         // Water computation for water blocks on the edge of a chunk is done by the OctreeFinalizer but we need the water level information
@@ -1189,49 +1189,49 @@ public class Scene implements Configurable {
                         // Compute lava level for blocks not on edge
                         Lava lava = (Lava) block;
                         int level0 = 8 - lava.level;
-                        int corner0 = level0;
-                        int corner1 = level0;
-                        int corner2 = level0;
-                        int corner3 = level0;
+                        int cornerSW = level0;
+                        int cornerSE = level0;
+                        int cornerNE = level0;
+                        int cornerNW = level0;
 
                         int level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz, level0);
-                        corner3 += level;
-                        corner0 += level;
+                        cornerNW += level;
+                        cornerSW += level;
 
                         level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz + 1, level0);
-                        corner0 += level;
+                        cornerSW += level;
 
                         level = Chunk.lavaLevelAt(chunkData, palette, cx, y, cz + 1, level0);
-                        corner0 += level;
-                        corner1 += level;
+                        cornerSW += level;
+                        cornerSE += level;
 
                         level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz + 1, level0);
-                        corner1 += level;
+                        cornerSE += level;
 
                         level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz, level0);
-                        corner1 += level;
-                        corner2 += level;
+                        cornerSE += level;
+                        cornerNE += level;
 
                         level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz - 1, level0);
-                        corner2 += level;
+                        cornerNE += level;
 
                         level = Chunk.lavaLevelAt(chunkData, palette, cx, y, cz - 1, level0);
-                        corner2 += level;
-                        corner3 += level;
+                        cornerNE += level;
+                        cornerNW += level;
 
                         level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz - 1, level0);
-                        corner3 += level;
+                        cornerNW += level;
 
-                        corner0 = Math.min(7, 8 - (corner0 / 4));
-                        corner1 = Math.min(7, 8 - (corner1 / 4));
-                        corner2 = Math.min(7, 8 - (corner2 / 4));
-                        corner3 = Math.min(7, 8 - (corner3 / 4));
+                        cornerSW = Math.min(7, 8 - (cornerSW / 4));
+                        cornerSE = Math.min(7, 8 - (cornerSE / 4));
+                        cornerNE = Math.min(7, 8 - (cornerNE / 4));
+                        cornerNW = Math.min(7, 8 - (cornerNW / 4));
                         octNode = palette.getLavaId(
                             lava.level,
-                            (corner0 << WaterModel.CORNER_0)
-                                | (corner1 << WaterModel.CORNER_1)
-                                | (corner2 << WaterModel.CORNER_2)
-                                | (corner3 << WaterModel.CORNER_3)
+                            (cornerSW << WaterModel.CORNER_SW)
+                                | (cornerSE << WaterModel.CORNER_SE)
+                                | (cornerNE << WaterModel.CORNER_NE)
+                                | (cornerNW << WaterModel.CORNER_NW)
                         );
                       }
                     }
