@@ -2728,18 +2728,18 @@ public class Scene implements Configurable {
     int x = (int) QuickMath.floor(ray.o.x);
     int y = (int) QuickMath.floor(ray.o.y);
     int z = (int) QuickMath.floor(ray.o.z);
-    Material material = worldOctree.getMaterial(x, y, z, palette);
-    if (material instanceof Block && !material.hidden) {
+    Block material = worldOctree.getBlock(x, y, z, palette);
+    if (!material.hidden) {
       if (material == Air.INSTANCE || material == Void.INSTANCE) {
         if (isUnderWaterPlane(ray.o)) {
           return WaterPlaneMaterial.INSTANCE;
         } else {
           return material;
         }
-      } else if (((Block) material).isInside(ray)) {
+      } else if (material.isInside(ray)) {
         return material;
       } else if (material.isWaterlogged()) {
-        if (worldOctree.getMaterial(x, y + 1, z, palette).isWaterFilled()) {
+        if (worldOctree.getBlock(x, y + 1, z, palette).isWaterFilled()) {
           return palette.water;
         } else if (ray.o.y - QuickMath.floor(ray.o.y) < 1 - WaterModel.TOP_BLOCK_GAP) {
           return palette.water;

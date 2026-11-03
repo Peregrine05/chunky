@@ -24,7 +24,7 @@ public abstract class LeavesBase extends AbstractModelBlock {
       int x = (int) QuickMath.floor(ray.o.x);
       int y = (int) QuickMath.floor(ray.o.y);
       int z = (int) QuickMath.floor(ray.o.z);
-      isWaterloggedFull = scene.getWorldOctree().getMaterial(x, y + 1, z, scene.getPalette()).isWaterFilled();
+      isWaterloggedFull = scene.getWorldOctree().getBlock(x, y + 1, z, scene.getPalette()).isWaterFilled();
       if (ray.getCurrentMedium().isWater()) {
         if (!isWaterloggedFull) {
           waterModel = WaterModel.WATER_TOP;

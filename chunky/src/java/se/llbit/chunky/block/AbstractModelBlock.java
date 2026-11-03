@@ -76,7 +76,7 @@ public abstract class AbstractModelBlock extends MinecraftBlock implements Model
       int x = (int) QuickMath.floor(ray.o.x + ray.d.x * Constants.OFFSET);
       int y = (int) QuickMath.floor(ray.o.y + ray.d.y * Constants.OFFSET);
       int z = (int) QuickMath.floor(ray.o.z + ray.d.z * Constants.OFFSET);
-      isWaterloggedFull = scene.getWorldOctree().getMaterial(x, y + 1, z, scene.getPalette()).isWaterFilled();
+      isWaterloggedFull = scene.getWorldOctree().getBlock(x, y + 1, z, scene.getPalette()).isWaterFilled();
       if (ray.getCurrentMedium().isWater()) {
         if (!isWaterloggedFull) {
           waterModel = WaterModel.WATER_TOP;
