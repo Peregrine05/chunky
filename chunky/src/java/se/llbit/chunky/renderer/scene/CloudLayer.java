@@ -18,10 +18,7 @@ import se.llbit.chunky.world.Clouds;
 import se.llbit.chunky.world.Material;
 import se.llbit.chunky.world.material.TextureMaterial;
 import se.llbit.json.JsonObject;
-import se.llbit.math.Intersectable;
-import se.llbit.math.IntersectionRecord;
-import se.llbit.math.Ray;
-import se.llbit.math.Vector4;
+import se.llbit.math.*;
 import se.llbit.util.Configurable;
 import se.llbit.util.HasControls;
 import se.llbit.util.Pair;
@@ -111,6 +108,10 @@ public class CloudLayer implements Intersectable, Configurable, HasControls {
     int target = 1;
     double t_offset = 0;
     if (oy < offsetY || oy > cloudTop) {
+      if (Math.abs(ray.d.y) < Constants.EPSILON) {
+        // ignore almost horizontal intersections that result in huge t_offset and negative t (issue #1664)
+        return new Pair<>(false, false);
+      }
       if (ray.d.y > 0) {
         t_offset = (offsetY - oy) / ray.d.y;
       } else {
