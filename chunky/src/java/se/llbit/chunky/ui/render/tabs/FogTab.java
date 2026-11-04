@@ -188,17 +188,14 @@ public class FogTab extends RenderControlsTab implements Initializable {
       int index = fogVolumeTable.getSelectionModel().getSelectedIndex();
       FogVolume fogVolume = scene.getFogVolumes().get(index);
 
-      HBox fogColorPickerBox = new HBox();
-      fogColorPickerBox.setSpacing(10);
-      Label label = new Label("Fog color:");
-      LuxColorPicker luxColorPicker = new LuxColorPicker();
-      luxColorPicker.setColor(ColorUtil.toFx(fogVolume.getMaterial().volumeColor));
-      luxColorPicker.colorProperty().addListener(
+      LuxColorPicker fogColorPicker = new LuxColorPicker();
+      fogColorPicker.setText("Fog color");
+      fogColorPicker.setColor(ColorUtil.toFx(fogVolume.getMaterial().volumeColor));
+      fogColorPicker.colorProperty().addListener(
         (observable, oldValue, newValue) -> {
           fogVolume.getMaterial().volumeColor.set(ColorUtil.fromFx(newValue));
           scene.refresh();
         });
-      fogColorPickerBox.getChildren().addAll(label, luxColorPicker);
 
       DoubleAdjuster density = new DoubleAdjuster();
       density.setName("Fog density");
@@ -235,13 +232,23 @@ public class FogTab extends RenderControlsTab implements Initializable {
         scene.refresh();
       });
 
+      LuxColorPicker emittanceColorPicker = new LuxColorPicker();
+      emittanceColorPicker.setText("Emittance color");
+      emittanceColorPicker.setColor(ColorUtil.toFx(fogVolume.getMaterial().volumeEmittanceColor));
+      emittanceColorPicker.colorProperty().addListener(
+        (observable, oldValue, newValue) -> {
+          fogVolume.getMaterial().volumeEmittanceColor.set(ColorUtil.fromFx(newValue));
+          scene.refresh();
+        });
+
       Separator separator = new Separator();
 
       volumeSpecificControls.getChildren().addAll(
-        fogColorPickerBox,
+        fogColorPicker,
         density,
         anisotropy,
         emittance,
+        emittanceColorPicker,
         separator
       );
 

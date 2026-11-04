@@ -72,6 +72,7 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
   private final DoubleAdjuster volumeDensity = new DoubleAdjuster();
   private final DoubleAdjuster volumeAnisotropy = new DoubleAdjuster();
   private final DoubleAdjuster volumeEmittance = new DoubleAdjuster();
+  private final LuxColorPicker volumeEmittanceColor = new LuxColorPicker();
   private final LuxColorPicker volumeColor = new LuxColorPicker();
   private final DoubleAdjuster absorption = new DoubleAdjuster();
   private final LuxColorPicker absorptionColor = new LuxColorPicker();
@@ -89,6 +90,7 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
   private ChangeListener<Color> specularColorListener = (observable, oldValue, newValue) -> {};
   private ChangeListener<Color> transmissionSpecularColorListener = (observable, oldValue, newValue) -> {};
   private ChangeListener<Color> diffuseColorListener = (observable, oldValue, newValue) -> {};
+  private ChangeListener<Color> volumeEmittanceColorListener = (observable, oldValue, newValue) -> {};
   private ChangeListener<Color> volumeColorListener = (observable, oldValue, newValue) -> {};
   private ChangeListener<Color> absorptionColorListener = (observable, oldValue, newValue) -> {};
   private ChangeListener<Boolean> opaqueListener = (observable, oldValue, newValue) -> {};
@@ -191,6 +193,9 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     volumeEmittance.clampMin();
     volumeEmittance.setTooltip("Emittance of volume medium.");
 
+    volumeEmittanceColor.setText("Volume emittance color");
+    volumeEmittanceColor.colorProperty().addListener(volumeEmittanceColorListener);
+
     volumeColor.setText("Volume color");
     volumeColor.colorProperty().addListener(volumeColorListener);
 
@@ -229,7 +234,7 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     settings.setVgap(10);
 
     VBox diffuseSettings = new VBox(6, emittance, emittanceColor, emitterMappingOffset, emitterMappingTypeBox, useReferenceColors, alpha, subsurfaceScattering, diffuseColor);
-    VBox volumeSettings = new VBox(6, volumeDensity, volumeAnisotropy, volumeEmittance, volumeColor, absorption, absorptionColor);
+    VBox volumeSettings = new VBox(6, volumeDensity, volumeAnisotropy, volumeEmittance, volumeEmittanceColor, volumeColor, absorption, absorptionColor);
     VBox specularSettings = new VBox(6, specular, ior, perceptualSmoothness, perceptualTransmissionSmoothness);
     VBox specularColorSettings = new VBox(6, metalness, transmissionMetalness, specularColor, transmissionSpecularColor);
     VBox otherSettings = new VBox(6, opaque, hidden);
@@ -307,6 +312,7 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     diffuseColor.colorProperty().removeListener(diffuseColorListener);
     specularColor.colorProperty().removeListener(specularColorListener);
     transmissionSpecularColor.colorProperty().removeListener(transmissionSpecularColorListener);
+    volumeEmittanceColor.colorProperty().removeListener(volumeEmittanceColorListener);
     volumeColor.colorProperty().removeListener(volumeColorListener);
     absorptionColor.colorProperty().removeListener(absorptionColorListener);
     opaque.selectedProperty().removeListener(opaqueListener);
@@ -408,6 +414,7 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
         volumeDensity.set(material.volumeDensity);
         volumeAnisotropy.set(material.volumeAnisotropy);
         volumeEmittance.set(material.volumeEmittance);
+        volumeEmittanceColor.setColor(ColorUtil.toFx(material.volumeEmittanceColor));
         volumeColor.setColor(ColorUtil.toFx(material.volumeColor));
         absorption.set(material.absorption);
         absorptionColor.setColor(ColorUtil.toFx(material.absorptionColor));
@@ -446,6 +453,8 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
       volumeDensity.onValueChange(value -> scene.setVolumeDensity(materialName, value.floatValue()));
       volumeAnisotropy.onValueChange(value -> scene.setVolumeAnisotropy(materialName, value.floatValue()));
       volumeEmittance.onValueChange(value -> scene.setVolumeEmittance(materialName, value.floatValue()));
+      volumeEmittanceColorListener = (observable, oldValue, newValue) -> scene.setVolumeEmittanceColor(materialName, ColorUtil.fromFx(newValue));
+      volumeEmittanceColor.colorProperty().addListener(volumeEmittanceColorListener);
       volumeColorListener = (observable, oldValue, newValue) -> scene.setVolumeColor(materialName, ColorUtil.fromFx(newValue));
       volumeColor.colorProperty().addListener(volumeColorListener);
       absorption.onValueChange(value -> scene.setAbsorption(materialName, value.floatValue()));
@@ -509,6 +518,7 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     diffuseColor.colorProperty().removeListener(diffuseColorListener);
     specularColor.colorProperty().removeListener(specularColorListener);
     transmissionSpecularColor.colorProperty().removeListener(transmissionSpecularColorListener);
+    volumeEmittanceColor.colorProperty().removeListener(volumeEmittanceColorListener);
     volumeColor.colorProperty().removeListener(volumeColorListener);
     absorptionColor.colorProperty().removeListener(absorptionColorListener);
     opaque.selectedProperty().removeListener(opaqueListener);
@@ -560,6 +570,7 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     volumeDensity.set(block.volumeDensity);
     volumeAnisotropy.set(block.volumeAnisotropy);
     volumeEmittance.set(block.volumeEmittance);
+    volumeEmittanceColor.setColor(ColorUtil.toFx(block.volumeEmittanceColor));
     volumeColor.setColor(ColorUtil.toFx(block.volumeColor));
     absorption.set(block.absorption);
     absorptionColor.setColor(ColorUtil.toFx(block.absorptionColor));
@@ -595,6 +606,8 @@ public class MaterialsTab extends RenderControlsTab implements Initializable {
     volumeDensity.onValueChange(value -> scene.setVolumeDensity(blockSpec, value.floatValue()));
     volumeAnisotropy.onValueChange(value -> scene.setVolumeAnisotropy(blockSpec, value.floatValue()));
     volumeEmittance.onValueChange(value -> scene.setVolumeEmittance(blockSpec, value.floatValue()));
+    volumeEmittanceColorListener = (observable, oldValue, newValue) -> scene.setVolumeEmittanceColor(blockSpec, ColorUtil.fromFx(newValue));
+    volumeEmittanceColor.colorProperty().addListener(volumeEmittanceColorListener);
     volumeColorListener = (observable, oldValue, newValue) -> scene.setVolumeColor(blockSpec, ColorUtil.fromFx(newValue));
     volumeColor.colorProperty().addListener(volumeColorListener);
     absorption.onValueChange(value -> scene.setAbsorption(blockSpec, value.floatValue()));

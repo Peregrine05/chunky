@@ -3829,6 +3829,23 @@ public class Scene implements Configurable {
   /**
    * Modifies the volume color property for the given material.
    */
+  public void setVolumeEmittanceColor(String materialName, Vector3 value) {
+    JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
+    material.set("volumeEmittanceColor", ColorUtil.rgbToJson(value));
+    materials.put(materialName, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  public void setVolumeEmittanceColor(BlockSpec blockSpec, Vector3 value) {
+    JsonObject material = paletteMaterials.getOrDefault(blockSpec, new JsonObject()).object();
+    material.set("volumeEmittanceColor", ColorUtil.rgbToJson(value));
+    paletteMaterials.put(blockSpec, material);
+    refresh(ResetReason.MATERIALS_CHANGED);
+  }
+
+  /**
+   * Modifies the volume color property for the given material.
+   */
   public void setVolumeColor(String materialName, Vector3 value) {
     JsonObject material = materials.getOrDefault(materialName, new JsonObject()).object();
     material.set("volumeColor", ColorUtil.rgbToJson(value));

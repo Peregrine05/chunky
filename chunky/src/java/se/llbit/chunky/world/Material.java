@@ -180,6 +180,11 @@ public abstract class Material {
   public float volumeEmittance = 0f;
 
   /**
+   * The color of light emitted from the volume medium.
+   */
+  public Vector3 volumeEmittanceColor = new Vector3(1, 1, 1);
+
+  /**
    * The color of the volume medium.
    */
   public Vector3 volumeColor = new Vector3(1, 1, 1);
@@ -238,6 +243,7 @@ public abstract class Material {
     volumeDensity = 0f;
     volumeAnisotropy = 0f;
     volumeEmittance = 0f;
+    volumeEmittanceColor.set(1);
     volumeColor.set(1, 1, 1);
     absorption = 0f;
     absorptionColor.set(1, 1, 1);
@@ -285,6 +291,7 @@ public abstract class Material {
     subSurfaceScattering = json.get("subsurfaceScattering").floatValue(subSurfaceScattering);
     diffuseColor.set(ColorUtil.jsonToRGB(json.get("diffuseColor").asObject(), diffuseColor));
     emittanceColor.set(ColorUtil.jsonToRGB(json.get("emittanceColor").asObject(), emittanceColor));
+    volumeEmittanceColor.set(ColorUtil.jsonToRGB(json.get("volumeEmittanceColor").asObject(), volumeEmittanceColor));
     volumeDensity = json.get("volumeDensity").floatValue(volumeDensity);
     volumeAnisotropy = json.get("volumeAnisotropy").floatValue(volumeAnisotropy);
     volumeEmittance = json.get("volumeEmittance").floatValue(volumeEmittance);
@@ -325,6 +332,7 @@ public abstract class Material {
     properties.add("subsurfaceScattering", subSurfaceScattering);
     properties.add("diffuseColor", ColorUtil.rgbToJson(diffuseColor));
     properties.add("emittanceColor", ColorUtil.rgbToJson(emittanceColor));
+    properties.add("volumeEmittanceColor", ColorUtil.rgbToJson(volumeEmittanceColor));
     properties.add("volumeDensity", volumeDensity);
     properties.add("volumeAnisotropy", volumeAnisotropy);
     properties.add("volumeEmittance", volumeEmittance);
@@ -795,6 +803,7 @@ public abstract class Material {
     DoubleAdjuster volumeDensityAdjuster = new DoubleAdjuster();
     DoubleAdjuster volumeAnisotropyAdjuster = new DoubleAdjuster();
     DoubleAdjuster volumeEmittanceAdjuster = new DoubleAdjuster();
+    LuxColorPicker volumeEmittanceColorPicker = new LuxColorPicker();
     LuxColorPicker volumeColorPicker = new LuxColorPicker();
     DoubleAdjuster absorptionAdjuster = new DoubleAdjuster();
     LuxColorPicker absorptionColorPicker = new LuxColorPicker();
@@ -992,6 +1001,15 @@ public abstract class Material {
       scene.refresh();
     });
 
+    volumeEmittanceColorPicker.setText("Volume emittance color");
+    volumeEmittanceColorPicker.setColor(ColorUtil.toFx(material.volumeEmittanceColor));
+    volumeEmittanceColorPicker.colorProperty().addListener(
+      ((observable, oldValue, newValue) -> {
+        material.volumeEmittanceColor.set(ColorUtil.fromFx(newValue));
+        scene.refresh();
+      })
+    );
+
     volumeColorPicker.setText("Volume color");
     volumeColorPicker.setColor(ColorUtil.toFx(material.volumeColor));
     volumeColorPicker.colorProperty().addListener(
@@ -1045,7 +1063,7 @@ public abstract class Material {
     settings.setVgap(10);
 
     VBox diffuseSettings = new VBox(6, emittanceAdjuster, emittanceColorPicker, emitterMappingOffset, emitterMappingTypeBox, useReferenceColors, alphaAdjuster, subsurfaceScatteringAdjuster, diffuseColorPicker);
-    VBox volumeSettings = new VBox(6, volumeDensityAdjuster, volumeAnisotropyAdjuster, volumeEmittanceAdjuster, volumeColorPicker, absorptionAdjuster, absorptionColorPicker);
+    VBox volumeSettings = new VBox(6, volumeDensityAdjuster, volumeAnisotropyAdjuster, volumeEmittanceAdjuster, volumeEmittanceColorPicker, volumeColorPicker, absorptionAdjuster, absorptionColorPicker);
     VBox specularSettings = new VBox(6, specularAdjuster, iorAdjuster, smoothnessAdjuster, transmissionSmoothnessAdjuster);
     VBox specularColorSettings = new VBox(6, metalnessAdjuster, transmissionMetalnessAdjuster, specularColorPicker, transmissionSpecularColorPicker);
     VBox otherSettings = new VBox(6, opaqueCheckBox, hiddenSwitch);

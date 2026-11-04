@@ -84,7 +84,8 @@ public class PathTracer implements RayTracer {
 
         ray.clearReflectionFlags();
         if (intersectionRecord.isVolumeIntersect()) {
-          emittance.set(intersectionRecord.material.volumeEmittance);
+          emittance.set(intersectionRecord.material.volumeEmittanceColor);
+          emittance.scale(intersectionRecord.material.volumeEmittance);
           intersectionRecord.material.volumeScatter(ray, random);
         } else {
           if (intersectionRecord.material.scatter(ray, intersectionRecord, scene, emittance, random)) {
