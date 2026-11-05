@@ -1151,33 +1151,41 @@ public class Scene implements Configurable {
                           int cornerNE = level0;
                           int cornerNW = level0;
 
-                          int level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz, level0);
-                          cornerNW += level;
-                          cornerSW += level;
+                            // west
+                            int level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz, level0);
+                            cornerNW += level;
+                            cornerSW += level;
 
-                          level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz + 1, level0);
-                          cornerSW += level;
+                            // south west
+                            level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz + 1, level0);
+                            cornerSW += level;
 
-                          level = Chunk.waterLevelAt(chunkData, palette, cx, y, cz + 1, level0);
-                          cornerSW += level;
-                          cornerSE += level;
+                            // south
+                            level = Chunk.waterLevelAt(chunkData, palette, cx, y, cz + 1, level0);
+                            cornerSW += level;
+                            cornerSE += level;
 
-                          level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz + 1, level0);
-                          cornerSE += level;
+                            // south east
+                            level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz + 1, level0);
+                            cornerSE += level;
 
-                          level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz, level0);
-                          cornerSE += level;
-                          cornerNE += level;
+                            // east
+                            level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz, level0);
+                            cornerSE += level;
+                            cornerNE += level;
 
-                          level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz - 1, level0);
-                          cornerNE += level;
+                            // north east
+                            level = Chunk.waterLevelAt(chunkData, palette, cx + 1, y, cz - 1, level0);
+                            cornerNE += level;
 
-                          level = Chunk.waterLevelAt(chunkData, palette, cx, y, cz - 1, level0);
-                          cornerNE += level;
-                          cornerNW += level;
+                            // north
+                            level = Chunk.waterLevelAt(chunkData, palette, cx, y, cz - 1, level0);
+                            cornerNE += level;
+                            cornerNW += level;
 
-                          level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz - 1, level0);
-                          cornerNW += level;
+                            // north west
+                            level = Chunk.waterLevelAt(chunkData, palette, cx - 1, y, cz - 1, level0);
+                            cornerNW += level;
 
                           cornerSW = Math.min(7, 8 - (cornerSW / 4));
                           cornerSE = Math.min(7, 8 - (cornerSE / 4));
@@ -1205,31 +1213,39 @@ public class Scene implements Configurable {
                         int cornerNE = level0;
                         int cornerNW = level0;
 
+                        // west
                         int level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz, level0);
                         cornerNW += level;
                         cornerSW += level;
 
+                        // south west
                         level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz + 1, level0);
                         cornerSW += level;
 
+                        // south
                         level = Chunk.lavaLevelAt(chunkData, palette, cx, y, cz + 1, level0);
                         cornerSW += level;
                         cornerSE += level;
 
+                        // south east
                         level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz + 1, level0);
                         cornerSE += level;
 
+                        // east
                         level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz, level0);
                         cornerSE += level;
                         cornerNE += level;
 
+                        // north east
                         level = Chunk.lavaLevelAt(chunkData, palette, cx + 1, y, cz - 1, level0);
                         cornerNE += level;
 
+                        // north
                         level = Chunk.lavaLevelAt(chunkData, palette, cx, y, cz - 1, level0);
                         cornerNE += level;
                         cornerNW += level;
 
+                        // north west
                         level = Chunk.lavaLevelAt(chunkData, palette, cx - 1, y, cz - 1, level0);
                         cornerNW += level;
 
@@ -2796,7 +2812,7 @@ public class Scene implements Configurable {
       int z = (int) QuickMath.floor(ray.o.z);
       Block block = worldOctree.getBlock(x, y, z, palette);
       return block.isWater()
-          && ((Water) block).isInside(ray);
+          && block.isInside(ray);
     }
     return false;
   }
