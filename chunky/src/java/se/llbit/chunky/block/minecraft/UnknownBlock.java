@@ -61,9 +61,4 @@ public class UnknownBlock extends SpriteBlock {
   public String description() {
     return description;
   }
-
-  @Override
-  public String description() {
-    return description;
-  }
 }
